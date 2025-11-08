@@ -1,5 +1,5 @@
 
-#include "ktx2_readwrite.h"
+#include "common/ktx2_readwrite.h"
 #include <stdint.h>
 #include "common/common.h"
 #include "common/formatting.h"
@@ -7,15 +7,16 @@
 #include "os/os_specific.h"
 #include "serialise/streamio.h"
 
-static const uint32_t ktx2_fourcc = MAKE_FOURCC('K', 'T', 'X', '2');
+static const uint8_t KTX2_IDENTIFIER[12] = {0xAB, 'K',  'T',  'X',  ' ',  '2',
+                                            '0',  0xBB, 0x0D, 0x0A, 0x1A, 0x0A};
 
+// TO-DO: Caroline: this could be a hack and only load certain types of ktx2 files.
 bool is_ktx2_file(const byte *headerBuffer, size_t size)
 {
-  if(size < 4)
-  {
+  if(size < 12)
     return false;
-  }
-  return memcmp(headerBuffer, &ktx2_fourcc, 4) == 0;
+
+  return memcmp(headerBuffer, KTX2_IDENTIFIER, 12) == 0;
 }
 
 // from MSDN
@@ -659,12 +660,13 @@ ktx2_DXGI_FORMAT ResourceFormat2DXGIFormat(ResourceFormat format)
   return DXGI_FORMAT_UNKNOWN;
 }
 
+/*
 RDResult write_ktx2_to_file(FILE *f, const write_tex_data &data)
 {
   if(!f)
     return RDResult(ResultCode::InvalidParameter, "Missing file handle writing DDS file");
 
-  uint32_t magic = ktx2_fourcc;
+  uint32_t magic[12] = {0xAB, 'K', 'T', 'X', ' ', '2', '0', 0xBB, 0x0D, 0x0A, 0x1A, 0x0A};
   KTX2_HEADER header;
   KTX2_HEADER_DXT10 headerDXT10;
   RDCEraseEl(header);
@@ -937,6 +939,7 @@ RDResult write_ktx2_to_file(FILE *f, const write_tex_data &data)
 
   return RDResult();
 }
+*/
 
 RDResult load_ktx2_from_file(StreamReader *reader, read_tex_data &ret)
 {
@@ -1052,6 +1055,7 @@ RDResult load_ktx2_from_file(StreamReader *reader, read_tex_data &ret)
         RETURN_ERROR_RESULT(ResultCode::ImageUnsupported,
                             "Legacy CxV8U8 DDS format is unsupported");
       }
+
       default:
       {
         RETURN_ERROR_RESULT(
