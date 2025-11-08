@@ -23,7 +23,7 @@
  ******************************************************************************/
 
 // TO-DO Caroline: update the includes for ktx2 so it's not relative
-#include "ktx2_readwrite.h"
+#include "../common/ktx2_readwrite.h"
 #include "common/dds_readwrite.h"
 #include "common/formatting.h"
 #include "core/core.h"
@@ -432,8 +432,8 @@ RDResult IMG_CreateReplayDevice(RDCFile *rdc, IReplayDriver **driver)
                         "Trying to load invalid handle as image-capture");
   }
 
-  byte headerBuffer[4];
-  const size_t headerSize = FileIO::fread(headerBuffer, 1, 4, f);
+  byte headerBuffer[12];
+  const size_t headerSize = FileIO::fread(headerBuffer, 1, 12, f);
   FileIO::fseek64(f, 0, SEEK_SET);
 
   // make sure the file is a type we recognise before going further
@@ -523,6 +523,16 @@ RDResult IMG_CreateReplayDevice(RDCFile *rdc, IReplayDriver **driver)
     RDResult res = load_dds_from_file(&reader, read_data);
     f = NULL;
 
+    if(res != ResultCode::Succeeded)
+      return res;
+  }
+  else if(is_ktx2_file(headerBuffer, headerSize))
+  {
+    FileIO::fseek64(f, 0, SEEK_SET);
+    StreamReader reader(f);
+    read_tex_data read_data = {};
+    RDResult res = load_ktx2_from_file(&reader, read_data);
+    f = NULL;
     if(res != ResultCode::Succeeded)
       return res;
   }
@@ -841,8 +851,9 @@ void ImageViewer::RefreshFile()
 
   bool dds = false;
   bool exr = false;
-  byte headerBuffer[4];
-  const size_t headerSize = FileIO::fread(headerBuffer, 1, 4, f);
+  bool ktx2 = false;
+  byte headerBuffer[12];
+  const size_t headerSize = FileIO::fread(headerBuffer, 1, 12, f);
 
   FileIO::fseek64(f, 0, SEEK_END);
   uint64_t fileSize = FileIO::ftell64(f);
@@ -866,6 +877,10 @@ void ImageViewer::RefreshFile()
   else if(is_dds_file(headerBuffer, headerSize))
   {
     dds = true;
+  }
+  else if(is_ktx2_file(headerBuffer, headerSize))
+  {
+    ktx2 = true;
   }
   else
   {
@@ -901,7 +916,7 @@ void ImageViewer::RefreshFile()
 
   // if we don't have data at this point (and we're not a dds/exr file) then the
   // file was corrupted and we failed to load it
-  if(!dds && !exr && data == NULL)
+  if(!dds && !exr && !ktx2 && data == NULL)
   {
     SET_ERROR_RESULT(m_Error, ResultCode::ImageUnsupported, "Image failed to load");
     FileIO::fclose(f);
@@ -914,7 +929,7 @@ void ImageViewer::RefreshFile()
 
   read_tex_data read_data = {};
 
-  if(dds || exr)
+  if(dds || exr || ktx2)
   {
     FileIO::fseek64(f, 0, SEEK_SET);
     RDResult res = ResultCode::FileIOFailed;
@@ -927,6 +942,12 @@ void ImageViewer::RefreshFile()
     else if(exr)
     {
       res = load_exr_from_file(f, fileSize, read_data);
+    }
+    else if(ktx2)
+    {
+      StreamReader reader(f);
+      res = load_ktx2_from_file(&reader, read_data);
+      f = NULL;
     }
 
     if(res != ResultCode::Succeeded)

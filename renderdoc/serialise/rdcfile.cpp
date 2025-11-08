@@ -22,7 +22,7 @@
  * THE SOFTWARE.
  ******************************************************************************/
 
-#include "ktx2_readwrite.h"
+#include "common/ktx2_readwrite.h"
 #include "rdcfile.h"
 #include <errno.h>
 #include "api/replay/version.h"
@@ -269,10 +269,11 @@ void RDCFile::Open(const rdcstr &path)
 
     FileIO::fseek64(m_File, 0, SEEK_SET);
 
-    byte headerBuffer[4];
-    const size_t headerSize = FileIO::fread(headerBuffer, 1, 4, m_File);
+    uint8_t headerBuffer[12] = {};
+    const size_t headerSize = FileIO::fread(headerBuffer, 1, 12, m_File);
 
-    if(is_dds_file(headerBuffer, headerSize) || is_exr_file(headerBuffer, headerSize) || is_ktx2_file(headerBuffer, headerSize))
+    if(is_dds_file(headerBuffer, headerSize) || is_exr_file(headerBuffer, headerSize) ||
+       is_ktx2_file(headerBuffer, headerSize))
       ret = x = y = comp = 1;
 
     FileIO::fseek64(m_File, 0, SEEK_SET);
