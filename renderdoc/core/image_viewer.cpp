@@ -572,10 +572,10 @@ RDResult IMG_CreateReplayDevice(RDCFile *rdc, IReplayDriver **driver)
 
   if(f != NULL)
     FileIO::fclose(f);
-
+  
   IReplayDriver *proxy = NULL;
   RDResult result = RenderDoc::Inst().CreateProxyReplayDriver(RDCDriver::Unknown, &proxy);
-
+  //RDResult result = ResultCode::Succeeded;
   if(result != ResultCode::Succeeded || !proxy)
   {
     RDCERR("Couldn't create replay driver to proxy-render images");
@@ -594,7 +594,7 @@ RDResult IMG_CreateReplayDevice(RDCFile *rdc, IReplayDriver **driver)
     (*driver)->Shutdown();
     return result;
   }
-
+  
   return ResultCode::Succeeded;
 }
 

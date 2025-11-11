@@ -1,4 +1,4 @@
-
+﻿
 #include "common/ktx2_readwrite.h"
 #include <stdint.h>
 #include "common/common.h"
@@ -6,6 +6,8 @@
 #include "common/result.h"
 #include "os/os_specific.h"
 #include "serialise/streamio.h"
+#include <vector>
+
 
 static const uint8_t KTX2_IDENTIFIER[12] = {0xAB, 'K',  'T',  'X',  ' ',  '2',
                                             '0',  0xBB, 0x0D, 0x0A, 0x1A, 0x0A};
@@ -34,21 +36,47 @@ struct KTX2_PIXELFORMAT
 
 struct KTX2_HEADER
 {
-  uint32_t dwSize;
-  uint32_t dwFlags;
-  uint32_t dwHeight;
-  uint32_t dwWidth;
-  uint32_t dwPitchOrLinearSize;
-  uint32_t dwDepth;
-  uint32_t dwMipMapCount;
-  uint32_t dwReserved1[11];
-  KTX2_PIXELFORMAT ddspf;
-  uint32_t dwCaps;
-  uint32_t dwCaps2;
-  uint32_t dwCaps3;
-  uint32_t dwCaps4;
-  uint32_t dwReserved2;
+    uint32_t vkFormat;
+    uint32_t typeSize;
+    uint32_t pixelWidth;
+    uint32_t pixelHeight;
+    uint32_t pixelDepth;
+    uint32_t layerCount;
+    uint32_t faceCount;
+    uint32_t levelCount;
+    uint32_t supercompressionScheme;
+
+    uint32_t dfdByteOffset;
+    uint32_t dfdByteLength;
+    uint32_t kvdByteOffset;
+    uint32_t kvdByteLength;
+    uint64_t sgdByteOffset;
+    uint64_t sgdByteLength;
 };
+
+#pragma pack(push, 1)
+struct KTX2Header
+{
+  uint32_t vkFormat;
+  uint32_t typeSize;
+  uint32_t pixelWidth;
+  uint32_t pixelHeight;
+  uint32_t pixelDepth;
+  uint32_t layerCount;
+  uint32_t faceCount;
+  uint32_t levelCount;
+  uint32_t supercompressionScheme;
+
+  uint32_t dfdByteOffset;
+  uint32_t dfdByteLength;
+  uint32_t kvdByteOffset;
+  uint32_t kvdByteLength;
+
+  uint64_t sgdByteOffset;
+  uint64_t sgdByteLength;
+};
+#pragma pack(pop)
+
 
 // from d3d10.h
 enum ktx2_D3D10_RESOURCE_DIMENSION
@@ -60,131 +88,111 @@ enum ktx2_D3D10_RESOURCE_DIMENSION
   D3D10_RESOURCE_DIMENSION_TEXTURE3D = 4
 };
 
-// from dxgiformat.h
-enum ktx2_DXGI_FORMAT
+enum VkFormat
 {
-  DXGI_FORMAT_UNKNOWN = 0,
-  DXGI_FORMAT_R32G32B32A32_TYPELESS = 1,
-  DXGI_FORMAT_R32G32B32A32_FLOAT = 2,
-  DXGI_FORMAT_R32G32B32A32_UINT = 3,
-  DXGI_FORMAT_R32G32B32A32_SINT = 4,
-  DXGI_FORMAT_R32G32B32_TYPELESS = 5,
-  DXGI_FORMAT_R32G32B32_FLOAT = 6,
-  DXGI_FORMAT_R32G32B32_UINT = 7,
-  DXGI_FORMAT_R32G32B32_SINT = 8,
-  DXGI_FORMAT_R16G16B16A16_TYPELESS = 9,
-  DXGI_FORMAT_R16G16B16A16_FLOAT = 10,
-  DXGI_FORMAT_R16G16B16A16_UNORM = 11,
-  DXGI_FORMAT_R16G16B16A16_UINT = 12,
-  DXGI_FORMAT_R16G16B16A16_SNORM = 13,
-  DXGI_FORMAT_R16G16B16A16_SINT = 14,
-  DXGI_FORMAT_R32G32_TYPELESS = 15,
-  DXGI_FORMAT_R32G32_FLOAT = 16,
-  DXGI_FORMAT_R32G32_UINT = 17,
-  DXGI_FORMAT_R32G32_SINT = 18,
-  DXGI_FORMAT_R32G8X24_TYPELESS = 19,
-  DXGI_FORMAT_D32_FLOAT_S8X24_UINT = 20,
-  DXGI_FORMAT_R32_FLOAT_X8X24_TYPELESS = 21,
-  DXGI_FORMAT_X32_TYPELESS_G8X24_UINT = 22,
-  DXGI_FORMAT_R10G10B10A2_TYPELESS = 23,
-  DXGI_FORMAT_R10G10B10A2_UNORM = 24,
-  DXGI_FORMAT_R10G10B10A2_UINT = 25,
-  DXGI_FORMAT_R11G11B10_FLOAT = 26,
-  DXGI_FORMAT_R8G8B8A8_TYPELESS = 27,
-  DXGI_FORMAT_R8G8B8A8_UNORM = 28,
-  DXGI_FORMAT_R8G8B8A8_UNORM_SRGB = 29,
-  DXGI_FORMAT_R8G8B8A8_UINT = 30,
-  DXGI_FORMAT_R8G8B8A8_SNORM = 31,
-  DXGI_FORMAT_R8G8B8A8_SINT = 32,
-  DXGI_FORMAT_R16G16_TYPELESS = 33,
-  DXGI_FORMAT_R16G16_FLOAT = 34,
-  DXGI_FORMAT_R16G16_UNORM = 35,
-  DXGI_FORMAT_R16G16_UINT = 36,
-  DXGI_FORMAT_R16G16_SNORM = 37,
-  DXGI_FORMAT_R16G16_SINT = 38,
-  DXGI_FORMAT_R32_TYPELESS = 39,
-  DXGI_FORMAT_D32_FLOAT = 40,
-  DXGI_FORMAT_R32_FLOAT = 41,
-  DXGI_FORMAT_R32_UINT = 42,
-  DXGI_FORMAT_R32_SINT = 43,
-  DXGI_FORMAT_R24G8_TYPELESS = 44,
-  DXGI_FORMAT_D24_UNORM_S8_UINT = 45,
-  DXGI_FORMAT_R24_UNORM_X8_TYPELESS = 46,
-  DXGI_FORMAT_X24_TYPELESS_G8_UINT = 47,
-  DXGI_FORMAT_R8G8_TYPELESS = 48,
-  DXGI_FORMAT_R8G8_UNORM = 49,
-  DXGI_FORMAT_R8G8_UINT = 50,
-  DXGI_FORMAT_R8G8_SNORM = 51,
-  DXGI_FORMAT_R8G8_SINT = 52,
-  DXGI_FORMAT_R16_TYPELESS = 53,
-  DXGI_FORMAT_R16_FLOAT = 54,
-  DXGI_FORMAT_D16_UNORM = 55,
-  DXGI_FORMAT_R16_UNORM = 56,
-  DXGI_FORMAT_R16_UINT = 57,
-  DXGI_FORMAT_R16_SNORM = 58,
-  DXGI_FORMAT_R16_SINT = 59,
-  DXGI_FORMAT_R8_TYPELESS = 60,
-  DXGI_FORMAT_R8_UNORM = 61,
-  DXGI_FORMAT_R8_UINT = 62,
-  DXGI_FORMAT_R8_SNORM = 63,
-  DXGI_FORMAT_R8_SINT = 64,
-  DXGI_FORMAT_A8_UNORM = 65,
-  DXGI_FORMAT_R1_UNORM = 66,
-  DXGI_FORMAT_R9G9B9E5_SHAREDEXP = 67,
-  DXGI_FORMAT_R8G8_B8G8_UNORM = 68,
-  DXGI_FORMAT_G8R8_G8B8_UNORM = 69,
-  DXGI_FORMAT_BC1_TYPELESS = 70,
-  DXGI_FORMAT_BC1_UNORM = 71,
-  DXGI_FORMAT_BC1_UNORM_SRGB = 72,
-  DXGI_FORMAT_BC2_TYPELESS = 73,
-  DXGI_FORMAT_BC2_UNORM = 74,
-  DXGI_FORMAT_BC2_UNORM_SRGB = 75,
-  DXGI_FORMAT_BC3_TYPELESS = 76,
-  DXGI_FORMAT_BC3_UNORM = 77,
-  DXGI_FORMAT_BC3_UNORM_SRGB = 78,
-  DXGI_FORMAT_BC4_TYPELESS = 79,
-  DXGI_FORMAT_BC4_UNORM = 80,
-  DXGI_FORMAT_BC4_SNORM = 81,
-  DXGI_FORMAT_BC5_TYPELESS = 82,
-  DXGI_FORMAT_BC5_UNORM = 83,
-  DXGI_FORMAT_BC5_SNORM = 84,
-  DXGI_FORMAT_B5G6R5_UNORM = 85,
-  DXGI_FORMAT_B5G5R5A1_UNORM = 86,
-  DXGI_FORMAT_B8G8R8A8_UNORM = 87,
-  DXGI_FORMAT_B8G8R8X8_UNORM = 88,
-  DXGI_FORMAT_R10G10B10_XR_BIAS_A2_UNORM = 89,
-  DXGI_FORMAT_B8G8R8A8_TYPELESS = 90,
-  DXGI_FORMAT_B8G8R8A8_UNORM_SRGB = 91,
-  DXGI_FORMAT_B8G8R8X8_TYPELESS = 92,
-  DXGI_FORMAT_B8G8R8X8_UNORM_SRGB = 93,
-  DXGI_FORMAT_BC6H_TYPELESS = 94,
-  DXGI_FORMAT_BC6H_UF16 = 95,
-  DXGI_FORMAT_BC6H_SF16 = 96,
-  DXGI_FORMAT_BC7_TYPELESS = 97,
-  DXGI_FORMAT_BC7_UNORM = 98,
-  DXGI_FORMAT_BC7_UNORM_SRGB = 99,
-  DXGI_FORMAT_AYUV = 100,
-  DXGI_FORMAT_Y410 = 101,
-  DXGI_FORMAT_Y416 = 102,
-  DXGI_FORMAT_NV12 = 103,
-  DXGI_FORMAT_P010 = 104,
-  DXGI_FORMAT_P016 = 105,
-  DXGI_FORMAT_420_OPAQUE = 106,
-  DXGI_FORMAT_YUY2 = 107,
-  DXGI_FORMAT_Y210 = 108,
-  DXGI_FORMAT_Y216 = 109,
-  DXGI_FORMAT_NV11 = 110,
-  DXGI_FORMAT_AI44 = 111,
-  DXGI_FORMAT_IA44 = 112,
-  DXGI_FORMAT_P8 = 113,
-  DXGI_FORMAT_A8P8 = 114,
-  DXGI_FORMAT_B4G4R4A4_UNORM = 115,
-  DXGI_FORMAT_FORCE_UINT = 0xffffffff
+  VK_FORMAT_UNDEFINED = 0,
+  VK_FORMAT_R4G4_UNORM_PACK8 = 1,
+  VK_FORMAT_R4G4B4A4_UNORM_PACK16 = 2,
+  VK_FORMAT_B4G4R4A4_UNORM_PACK16 = 3,
+  VK_FORMAT_R5G6B5_UNORM_PACK16 = 4,
+  VK_FORMAT_B5G6R5_UNORM_PACK16 = 5,
+  VK_FORMAT_R5G5B5A1_UNORM_PACK16 = 6,
+  VK_FORMAT_B5G5R5A1_UNORM_PACK16 = 7,
+  VK_FORMAT_A1R5G5B5_UNORM_PACK16 = 8,
+  VK_FORMAT_R8_UNORM = 9,
+  VK_FORMAT_R8_SNORM = 10,
+  VK_FORMAT_R8_USCALED = 11,
+  VK_FORMAT_R8_SSCALED = 12,
+  VK_FORMAT_R8_UINT = 13,
+  VK_FORMAT_R8_SINT = 14,
+  VK_FORMAT_R8_SRGB = 15,
+  VK_FORMAT_R8G8_UNORM = 16,
+  VK_FORMAT_R8G8_SNORM = 17,
+  VK_FORMAT_R8G8_USCALED = 18,
+  VK_FORMAT_R8G8_SSCALED = 19,
+  VK_FORMAT_R8G8_UINT = 20,
+  VK_FORMAT_R8G8_SINT = 21,
+  VK_FORMAT_R8G8_SRGB = 22,
+  VK_FORMAT_R8G8B8_UNORM = 23,
+  VK_FORMAT_R8G8B8_SNORM = 24,
+  VK_FORMAT_R8G8B8_USCALED = 25,
+  VK_FORMAT_R8G8B8_SSCALED = 26,
+  VK_FORMAT_R8G8B8_UINT = 27,
+  VK_FORMAT_R8G8B8_SINT = 28,
+  VK_FORMAT_R8G8B8_SRGB = 29,
+  VK_FORMAT_B8G8R8_UNORM = 30,
+  VK_FORMAT_B8G8R8_SNORM = 31,
+  VK_FORMAT_B8G8R8_USCALED = 32,
+  VK_FORMAT_B8G8R8_SSCALED = 33,
+  VK_FORMAT_B8G8R8_UINT = 34,
+  VK_FORMAT_B8G8R8_SINT = 35,
+  VK_FORMAT_B8G8R8_SRGB = 36,
+  VK_FORMAT_R8G8B8A8_UNORM = 37,
+  VK_FORMAT_R8G8B8A8_SNORM = 38,
+  VK_FORMAT_R8G8B8A8_USCALED = 39,
+  VK_FORMAT_R8G8B8A8_SSCALED = 40,
+  VK_FORMAT_R8G8B8A8_UINT = 41,
+  VK_FORMAT_R8G8B8A8_SINT = 42,
+  VK_FORMAT_R8G8B8A8_SRGB = 43,
+  VK_FORMAT_B8G8R8A8_UNORM = 44,
+  VK_FORMAT_B8G8R8A8_SNORM = 45,
+  VK_FORMAT_B8G8R8A8_USCALED = 46,
+  VK_FORMAT_B8G8R8A8_SSCALED = 47,
+  VK_FORMAT_B8G8R8A8_UINT = 48,
+  VK_FORMAT_B8G8R8A8_SINT = 49,
+  VK_FORMAT_B8G8R8A8_SRGB = 50,
+  VK_FORMAT_A8B8G8R8_UNORM_PACK32 = 51,
+  VK_FORMAT_A8B8G8R8_SNORM_PACK32 = 52,
+  VK_FORMAT_A8B8G8R8_USCALED_PACK32 = 53,
+  VK_FORMAT_A8B8G8R8_SSCALED_PACK32 = 54,
+  VK_FORMAT_A8B8G8R8_UINT_PACK32 = 55,
+  VK_FORMAT_A8B8G8R8_SINT_PACK32 = 56,
+  VK_FORMAT_A8B8G8R8_SRGB_PACK32 = 57,
+  VK_FORMAT_A2R10G10B10_UNORM_PACK32 = 58,
+  VK_FORMAT_A2R10G10B10_SNORM_PACK32 = 59,
+  VK_FORMAT_A2R10G10B10_USCALED_PACK32 = 60,
+  VK_FORMAT_A2R10G10B10_SSCALED_PACK32 = 61,
+  VK_FORMAT_A2R10G10B10_UINT_PACK32 = 62,
+  VK_FORMAT_A2R10G10B10_SINT_PACK32 = 63,
+  VK_FORMAT_A2B10G10R10_UNORM_PACK32 = 64,
+  VK_FORMAT_A2B10G10R10_SNORM_PACK32 = 65,
+  VK_FORMAT_A2B10G10R10_USCALED_PACK32 = 66,
+  VK_FORMAT_A2B10G10R10_SSCALED_PACK32 = 67,
+  VK_FORMAT_A2B10G10R10_UINT_PACK32 = 68,
+  VK_FORMAT_A2B10G10R10_SINT_PACK32 = 69,
+  VK_FORMAT_R16_UNORM = 70,
+  VK_FORMAT_R16_SNORM = 71,
+  VK_FORMAT_R16_USCALED = 72,
+  VK_FORMAT_R16_SSCALED = 73,
+  VK_FORMAT_R16_UINT = 74,
+  VK_FORMAT_R16_SINT = 75,
+  VK_FORMAT_R16_SFLOAT = 76,
+  VK_FORMAT_R16G16_UNORM = 77,
+  VK_FORMAT_R16G16_SNORM = 78,
+  VK_FORMAT_R16G16_USCALED = 79,
+  VK_FORMAT_R16G16_SSCALED = 80,
+  VK_FORMAT_R16G16_UINT = 81,
+  VK_FORMAT_R16G16_SINT = 82,
+  VK_FORMAT_R16G16_SFLOAT = 83,
+  VK_FORMAT_R16G16B16_UNORM = 84,
+  VK_FORMAT_R16G16B16_SNORM = 85,
+  VK_FORMAT_R16G16B16_USCALED = 86,
+  VK_FORMAT_R16G16B16_SSCALED = 87,
+  VK_FORMAT_R16G16B16_UINT = 88,
+  VK_FORMAT_R16G16B16_SINT = 89,
+  VK_FORMAT_R16G16B16_SFLOAT = 90,
+  VK_FORMAT_R16G16B16A16_UNORM = 91,
+  VK_FORMAT_R16G16B16A16_SNORM = 92,
+  VK_FORMAT_R16G16B16A16_USCALED = 93,
+  VK_FORMAT_R16G16B16A16_SSCALED = 94,
+  VK_FORMAT_R16G16B16A16_UINT = 95,
+  VK_FORMAT_R16G16B16A16_SINT = 96,
+  VK_FORMAT_R16G16B16A16_SFLOAT = 97
 };
 
-struct KTX2_HEADER_DXT10
+struct KTX2_HEADER_VK
 {
-  ktx2_DXGI_FORMAT dxgiFormat;
+  VkFormat vkFormat;
   ktx2_D3D10_RESOURCE_DIMENSION resourceDimension;
   uint32_t miscFlag;
   uint32_t arraySize;
@@ -219,445 +227,27 @@ struct KTX2_HEADER_DXT10
 #define DDPF_BUMPDUDV 0x80000
 #define DDPF_RGBA (DDPF_RGB | DDPF_ALPHAPIXELS)
 
-ResourceFormat DXGIFormat2ResourceFormat(ktx2_DXGI_FORMAT format)
+ResourceFormat VKFormat2ResourceFormat(VkFormat format)
 {
-  ResourceFormat special;
-  ResourceFormat fmt32, fmt16, fmt8;
+  ResourceFormat ret;
+  ret.type = ResourceFormatType::BC7;
+  ret.compCount = 4;
+  ret.compByteWidth = 1;
+  ret.compType = CompType::UNorm;
 
-  fmt32.compByteWidth = 4;
-  fmt32.compCount = 1;
-  fmt32.compType = CompType::Float;
-  fmt32.type = ResourceFormatType::Regular;
-
-  fmt16.compByteWidth = 2;
-  fmt16.compCount = 1;
-  fmt16.compType = CompType::Float;
-  fmt16.type = ResourceFormatType::Regular;
-
-  fmt8.compByteWidth = 1;
-  fmt8.compCount = 1;
-  fmt8.compType = CompType::UNorm;
-  fmt8.type = ResourceFormatType::Regular;
-
-  special.compCount = 4;
-
+  /*
   switch(format)
   {
-    case DXGI_FORMAT_BC1_UNORM:
-    case DXGI_FORMAT_BC1_UNORM_SRGB:
-      special.type = ResourceFormatType::BC1;
-      special.compType =
-          (format == DXGI_FORMAT_BC1_UNORM_SRGB) ? CompType::UNormSRGB : CompType::UNorm;
-      return special;
-    case DXGI_FORMAT_BC2_UNORM:
-    case DXGI_FORMAT_BC2_UNORM_SRGB:
-      special.type = ResourceFormatType::BC2;
-      special.compType =
-          (format == DXGI_FORMAT_BC2_UNORM_SRGB) ? CompType::UNormSRGB : CompType::UNorm;
-      return special;
-    case DXGI_FORMAT_BC3_UNORM:
-    case DXGI_FORMAT_BC3_UNORM_SRGB:
-      special.type = ResourceFormatType::BC3;
-      special.compType =
-          (format == DXGI_FORMAT_BC3_UNORM_SRGB) ? CompType::UNormSRGB : CompType::UNorm;
-      return special;
-    case DXGI_FORMAT_BC4_UNORM:
-    case DXGI_FORMAT_BC4_SNORM:
-      special.type = ResourceFormatType::BC4;
-      special.compType = (format == DXGI_FORMAT_BC4_UNORM ? CompType::UNorm : CompType::SNorm);
-      special.compCount = 1;
-      return special;
-    case DXGI_FORMAT_BC5_UNORM:
-    case DXGI_FORMAT_BC5_SNORM:
-      special.type = ResourceFormatType::BC5;
-      special.compType = (format == DXGI_FORMAT_BC5_UNORM ? CompType::UNorm : CompType::SNorm);
-      special.compCount = 2;
-      return special;
-    case DXGI_FORMAT_BC6H_UF16:
-    case DXGI_FORMAT_BC6H_SF16:
-      special.type = ResourceFormatType::BC6;
-      special.compType = (format == DXGI_FORMAT_BC6H_UF16 ? CompType::UNorm : CompType::SNorm);
-      special.compCount = 3;
-      return special;
-    case DXGI_FORMAT_BC7_UNORM:
-    case DXGI_FORMAT_BC7_UNORM_SRGB:
-      special.type = ResourceFormatType::BC7;
-      special.compType =
-          (format == DXGI_FORMAT_BC7_UNORM_SRGB) ? CompType::UNormSRGB : CompType::UNorm;
-      return special;
-    case DXGI_FORMAT_R10G10B10A2_UNORM:
-    case DXGI_FORMAT_R10G10B10A2_UINT:
-      special.type = ResourceFormatType::R10G10B10A2;
-      special.compType = (format == DXGI_FORMAT_R10G10B10A2_UNORM ? CompType::UNorm : CompType::UInt);
-      return special;
-    case DXGI_FORMAT_R11G11B10_FLOAT:
-      special.type = ResourceFormatType::R11G11B10;
-      special.compCount = 3;
-      return special;
-    case DXGI_FORMAT_B5G6R5_UNORM:
-      special.SetBGRAOrder(true);
-      special.type = ResourceFormatType::R5G6B5;
-      special.compCount = 3;
-      return special;
-    case DXGI_FORMAT_B5G5R5A1_UNORM:
-      special.SetBGRAOrder(true);
-      special.type = ResourceFormatType::R5G5B5A1;
-      return special;
-    case DXGI_FORMAT_R9G9B9E5_SHAREDEXP:
-      special.type = ResourceFormatType::R9G9B9E5;
-      special.compCount = 3;
-      return special;
-    case DXGI_FORMAT_A8_UNORM:
-      special.type = ResourceFormatType::A8;
-      special.compType = CompType::UNorm;
-      special.compByteWidth = 1;
-      special.compCount = 1;
-      return special;
-    case DXGI_FORMAT_B4G4R4A4_UNORM:
-      special.SetBGRAOrder(true);
-      special.type = ResourceFormatType::R4G4B4A4;
-      return special;
-    case DXGI_FORMAT_D24_UNORM_S8_UINT:
-      special.compType = CompType::Depth;
-      special.type = ResourceFormatType::D24S8;
-      special.compCount = 2;
-      return special;
-    case DXGI_FORMAT_D32_FLOAT_S8X24_UINT:
-      special.compType = CompType::Depth;
-      special.type = ResourceFormatType::D32S8;
-      special.compCount = 2;
-      return special;
-    case DXGI_FORMAT_YUY2:
-      special.type = ResourceFormatType::YUV8;
-      special.compByteWidth = 1;
-      special.compCount = 3;
-      special.compType = CompType::UNorm;
-      special.SetYUVSubsampling(422);
-      return special;
+    case VK_FORMAT_R8G8B8A8_UNORM: 
+        ret = {ResourceFormatType::ASTC, CompType::UNorm, 4, 1}; 
+        break;
+    default: 
+        ret = {ResourceFormatType::Undefined, CompType::Typeless, 0, 0}; 
+        break;
 
-    case DXGI_FORMAT_R32G32B32A32_UINT:
-      fmt32.compType = CompType::UInt;
-      fmt32.compCount = 4;
-      return fmt32;
-    case DXGI_FORMAT_R32G32B32A32_SINT:
-      fmt32.compType = CompType::SInt;
-      fmt32.compCount = 4;
-      return fmt32;
-    case DXGI_FORMAT_R32G32B32A32_FLOAT: fmt32.compCount = 4; return fmt32;
-
-    case DXGI_FORMAT_R32G32B32_UINT:
-      fmt32.compType = CompType::UInt;
-      fmt32.compCount = 3;
-      return fmt32;
-    case DXGI_FORMAT_R32G32B32_SINT:
-      fmt32.compType = CompType::SInt;
-      fmt32.compCount = 3;
-      return fmt32;
-    case DXGI_FORMAT_R32G32B32_FLOAT: fmt32.compCount = 3; return fmt32;
-
-    case DXGI_FORMAT_R32G32_UINT:
-      fmt32.compType = CompType::UInt;
-      fmt32.compCount = 2;
-      return fmt32;
-    case DXGI_FORMAT_R32G32_SINT:
-      fmt32.compType = CompType::SInt;
-      fmt32.compCount = 2;
-      return fmt32;
-    case DXGI_FORMAT_R32G32_FLOAT: fmt32.compCount = 2; return fmt32;
-
-    case DXGI_FORMAT_R32_UINT: fmt32.compType = CompType::UInt; return fmt32;
-    case DXGI_FORMAT_R32_SINT: fmt32.compType = CompType::SInt; return fmt32;
-    case DXGI_FORMAT_D32_FLOAT: fmt32.compType = CompType::Depth; return fmt32;
-    case DXGI_FORMAT_R32_FLOAT: return fmt32;
-
-    case DXGI_FORMAT_R16G16B16A16_UINT:
-      fmt16.compType = CompType::UInt;
-      fmt16.compCount = 4;
-      return fmt16;
-    case DXGI_FORMAT_R16G16B16A16_SINT:
-      fmt16.compType = CompType::SInt;
-      fmt16.compCount = 4;
-      return fmt16;
-    case DXGI_FORMAT_R16G16B16A16_UNORM:
-      fmt16.compType = CompType::UNorm;
-      fmt16.compCount = 4;
-      return fmt16;
-    case DXGI_FORMAT_R16G16B16A16_SNORM:
-      fmt16.compType = CompType::SNorm;
-      fmt16.compCount = 4;
-      return fmt16;
-    case DXGI_FORMAT_R16G16B16A16_FLOAT: fmt16.compCount = 4; return fmt16;
-
-    case DXGI_FORMAT_R16G16_UINT:
-      fmt16.compType = CompType::UInt;
-      fmt16.compCount = 2;
-      return fmt16;
-    case DXGI_FORMAT_R16G16_SINT:
-      fmt16.compType = CompType::SInt;
-      fmt16.compCount = 2;
-      return fmt16;
-    case DXGI_FORMAT_R16G16_UNORM:
-      fmt16.compType = CompType::UNorm;
-      fmt16.compCount = 2;
-      return fmt16;
-    case DXGI_FORMAT_R16G16_SNORM:
-      fmt16.compType = CompType::SNorm;
-      fmt16.compCount = 2;
-      return fmt16;
-    case DXGI_FORMAT_R16G16_FLOAT: fmt16.compCount = 2; return fmt16;
-
-    case DXGI_FORMAT_D16_UNORM: fmt16.compType = CompType::Depth; return fmt16;
-    case DXGI_FORMAT_R16_UINT: fmt16.compType = CompType::UInt; return fmt16;
-    case DXGI_FORMAT_R16_SINT: fmt16.compType = CompType::SInt; return fmt16;
-    case DXGI_FORMAT_R16_UNORM: fmt16.compType = CompType::UNorm; return fmt16;
-    case DXGI_FORMAT_R16_SNORM: fmt16.compType = CompType::SNorm; return fmt16;
-    case DXGI_FORMAT_R16_FLOAT: return fmt16;
-
-    case DXGI_FORMAT_R8G8B8A8_UINT:
-      fmt8.compType = CompType::UInt;
-      fmt8.compCount = 4;
-      return fmt8;
-    case DXGI_FORMAT_R8G8B8A8_SINT:
-      fmt8.compType = CompType::SInt;
-      fmt8.compCount = 4;
-      return fmt8;
-    case DXGI_FORMAT_R8G8B8A8_SNORM:
-      fmt8.compType = CompType::SNorm;
-      fmt8.compCount = 4;
-      return fmt8;
-    case DXGI_FORMAT_R8G8B8A8_UNORM_SRGB:
-      fmt8.compType = CompType::UNormSRGB;
-      fmt8.compCount = 4;
-      return fmt8;
-    case DXGI_FORMAT_R8G8B8A8_UNORM: fmt8.compCount = 4; return fmt8;
-    case DXGI_FORMAT_B8G8R8X8_UNORM:
-    case DXGI_FORMAT_B8G8R8X8_UNORM_SRGB:
-    case DXGI_FORMAT_B8G8R8A8_UNORM:
-    case DXGI_FORMAT_B8G8R8A8_UNORM_SRGB:
-      fmt8.compCount = 4;
-      fmt8.SetBGRAOrder(true);
-      fmt8.compType =
-          (format == DXGI_FORMAT_B8G8R8A8_UNORM_SRGB || format == DXGI_FORMAT_B8G8R8X8_UNORM_SRGB)
-              ? CompType::UNormSRGB
-              : CompType::UNorm;
-      return fmt8;
-
-    case DXGI_FORMAT_R8G8_UINT:
-      fmt8.compType = CompType::UInt;
-      fmt8.compCount = 2;
-      return fmt8;
-    case DXGI_FORMAT_R8G8_SINT:
-      fmt8.compType = CompType::SInt;
-      fmt8.compCount = 2;
-      return fmt8;
-    case DXGI_FORMAT_R8G8_SNORM:
-      fmt8.compType = CompType::SNorm;
-      fmt8.compCount = 2;
-      return fmt8;
-    case DXGI_FORMAT_R8G8_UNORM: fmt8.compCount = 2; return fmt8;
-
-    case DXGI_FORMAT_R8_UINT: fmt8.compType = CompType::UInt; return fmt8;
-    case DXGI_FORMAT_R8_SINT: fmt8.compType = CompType::SInt; return fmt8;
-    case DXGI_FORMAT_R8_SNORM: fmt8.compType = CompType::SNorm; return fmt8;
-    case DXGI_FORMAT_R8_UNORM: return fmt8;
-
-    default: RDCWARN("Unsupported DXGI_FORMAT: %u", (uint32_t)format);
   }
-
-  return ResourceFormat();
-}
-
-ktx2_DXGI_FORMAT ResourceFormat2DXGIFormat(ResourceFormat format)
-{
-  if(format.Special())
-  {
-    switch(format.type)
-    {
-      case ResourceFormatType::BC1:
-        return format.SRGBCorrected() ? DXGI_FORMAT_BC1_UNORM_SRGB : DXGI_FORMAT_BC1_UNORM;
-      case ResourceFormatType::BC2:
-        return format.SRGBCorrected() ? DXGI_FORMAT_BC2_UNORM_SRGB : DXGI_FORMAT_BC2_UNORM;
-      case ResourceFormatType::BC3:
-        return format.SRGBCorrected() ? DXGI_FORMAT_BC3_UNORM_SRGB : DXGI_FORMAT_BC3_UNORM;
-      case ResourceFormatType::BC4:
-        return format.compType == CompType::SNorm ? DXGI_FORMAT_BC4_SNORM : DXGI_FORMAT_BC4_UNORM;
-      case ResourceFormatType::BC5:
-        return format.compType == CompType::SNorm ? DXGI_FORMAT_BC5_SNORM : DXGI_FORMAT_BC5_UNORM;
-      case ResourceFormatType::BC6:
-        return format.compType == CompType::SNorm ? DXGI_FORMAT_BC6H_SF16 : DXGI_FORMAT_BC6H_UF16;
-      case ResourceFormatType::BC7:
-        return format.SRGBCorrected() ? DXGI_FORMAT_BC7_UNORM_SRGB : DXGI_FORMAT_BC7_UNORM;
-      case ResourceFormatType::R10G10B10A2:
-        if(format.BGRAOrder())
-          return DXGI_FORMAT_UNKNOWN;
-        return format.compType == CompType::UInt ? DXGI_FORMAT_R10G10B10A2_UINT
-                                                 : DXGI_FORMAT_R10G10B10A2_UNORM;
-      case ResourceFormatType::R11G11B10: return DXGI_FORMAT_R11G11B10_FLOAT;
-      case ResourceFormatType::R5G6B5:
-        if(!format.BGRAOrder())
-          return DXGI_FORMAT_UNKNOWN;
-        return DXGI_FORMAT_B5G6R5_UNORM;
-      case ResourceFormatType::R5G5B5A1:
-        if(!format.BGRAOrder())
-          return DXGI_FORMAT_UNKNOWN;
-        return DXGI_FORMAT_B5G5R5A1_UNORM;
-      case ResourceFormatType::R9G9B9E5: return DXGI_FORMAT_R9G9B9E5_SHAREDEXP;
-      case ResourceFormatType::R4G4B4A4:
-        if(!format.BGRAOrder())
-          return DXGI_FORMAT_UNKNOWN;
-        return DXGI_FORMAT_B4G4R4A4_UNORM;
-      case ResourceFormatType::D24S8: return DXGI_FORMAT_D24_UNORM_S8_UINT;
-      case ResourceFormatType::D32S8: return DXGI_FORMAT_D32_FLOAT_S8X24_UINT;
-      case ResourceFormatType::S8: return DXGI_FORMAT_R8_UINT;
-      case ResourceFormatType::A8: return DXGI_FORMAT_A8_UNORM;
-      default:
-      case ResourceFormatType::R4G4:
-      case ResourceFormatType::D16S8:
-      case ResourceFormatType::ETC2:
-      case ResourceFormatType::EAC:
-      case ResourceFormatType::ASTC:
-      case ResourceFormatType::YUV8:
-      case ResourceFormatType::YUV10:
-      case ResourceFormatType::YUV12:
-      case ResourceFormatType::YUV16: return DXGI_FORMAT_UNKNOWN;
-    }
-  }
-
-  if(format.compCount == 4)
-  {
-    if(format.compByteWidth == 4)
-    {
-      switch(format.compType)
-      {
-        case CompType::UInt: return DXGI_FORMAT_R32G32B32A32_UINT;
-        case CompType::SInt: return DXGI_FORMAT_R32G32B32A32_SINT;
-        default: return DXGI_FORMAT_R32G32B32A32_FLOAT;
-      }
-    }
-    else if(format.compByteWidth == 2)
-    {
-      switch(format.compType)
-      {
-        case CompType::UInt: return DXGI_FORMAT_R16G16B16A16_UINT;
-        case CompType::SInt: return DXGI_FORMAT_R16G16B16A16_SINT;
-        case CompType::UNorm: return DXGI_FORMAT_R16G16B16A16_UNORM;
-        case CompType::SNorm: return DXGI_FORMAT_R16G16B16A16_SNORM;
-        default: return DXGI_FORMAT_R16G16B16A16_FLOAT;
-      }
-    }
-    else if(format.compByteWidth == 1)
-    {
-      switch(format.compType)
-      {
-        case CompType::UInt: return DXGI_FORMAT_R8G8B8A8_UINT;
-        case CompType::SInt: return DXGI_FORMAT_R8G8B8A8_SINT;
-        case CompType::SNorm: return DXGI_FORMAT_R8G8B8A8_SNORM;
-        default:
-        case CompType::UNorm:
-        case CompType::UNormSRGB:
-          if(format.SRGBCorrected())
-          {
-            if(format.BGRAOrder())
-              return DXGI_FORMAT_B8G8R8A8_UNORM_SRGB;
-            else
-              return DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
-          }
-          else
-          {
-            if(format.BGRAOrder())
-              return DXGI_FORMAT_B8G8R8A8_UNORM;
-            else
-              return DXGI_FORMAT_R8G8B8A8_UNORM;
-          }
-      }
-    }
-    return DXGI_FORMAT_UNKNOWN;
-  }
-  else if(format.compCount == 3)
-  {
-    if(format.compByteWidth == 4)
-    {
-      switch(format.compType)
-      {
-        case CompType::UInt: return DXGI_FORMAT_R32G32B32_UINT;
-        case CompType::SInt: return DXGI_FORMAT_R32G32B32_SINT;
-        default: return DXGI_FORMAT_R32G32B32_FLOAT;
-      }
-    }
-    return DXGI_FORMAT_UNKNOWN;
-  }
-  else if(format.compCount == 2)
-  {
-    if(format.compByteWidth == 4)
-    {
-      switch(format.compType)
-      {
-        case CompType::UInt: return DXGI_FORMAT_R32G32_UINT;
-        case CompType::SInt: return DXGI_FORMAT_R32G32_SINT;
-        default: return DXGI_FORMAT_R32G32_FLOAT;
-      }
-    }
-    else if(format.compByteWidth == 2)
-    {
-      switch(format.compType)
-      {
-        case CompType::UInt: return DXGI_FORMAT_R16G16_UINT;
-        case CompType::SInt: return DXGI_FORMAT_R16G16_SINT;
-        case CompType::UNorm: return DXGI_FORMAT_R16G16_UNORM;
-        case CompType::SNorm: return DXGI_FORMAT_R16G16_SNORM;
-        default: return DXGI_FORMAT_R16G16_FLOAT;
-      }
-    }
-    else if(format.compByteWidth == 1)
-    {
-      switch(format.compType)
-      {
-        case CompType::UInt: return DXGI_FORMAT_R8G8_UINT;
-        case CompType::SInt: return DXGI_FORMAT_R8G8_SINT;
-        case CompType::SNorm: return DXGI_FORMAT_R8G8_SNORM;
-        default: return DXGI_FORMAT_R8G8_UNORM;
-      }
-    }
-    return DXGI_FORMAT_UNKNOWN;
-  }
-  else if(format.compCount == 1)
-  {
-    if(format.compByteWidth == 4)
-    {
-      switch(format.compType)
-      {
-        case CompType::UInt: return DXGI_FORMAT_R32_UINT;
-        case CompType::SInt: return DXGI_FORMAT_R32_SINT;
-        case CompType::Depth: return DXGI_FORMAT_D32_FLOAT;
-        default: return DXGI_FORMAT_R32_FLOAT;
-      }
-    }
-    else if(format.compByteWidth == 2)
-    {
-      switch(format.compType)
-      {
-        case CompType::Depth: return DXGI_FORMAT_D16_UNORM;
-        case CompType::UInt: return DXGI_FORMAT_R16_UINT;
-        case CompType::SInt: return DXGI_FORMAT_R16_SINT;
-        case CompType::UNorm: return DXGI_FORMAT_R16_UNORM;
-        case CompType::SNorm: return DXGI_FORMAT_R16_SNORM;
-        default: return DXGI_FORMAT_R16_FLOAT;
-      }
-    }
-    else if(format.compByteWidth == 1)
-    {
-      switch(format.compType)
-      {
-        case CompType::UInt: return DXGI_FORMAT_R8_UINT;
-        case CompType::SInt: return DXGI_FORMAT_R8_SINT;
-        case CompType::SNorm: return DXGI_FORMAT_R8_SNORM;
-        default: return DXGI_FORMAT_R8_UNORM;
-      }
-    }
-    return DXGI_FORMAT_UNKNOWN;
-  }
-
-  return DXGI_FORMAT_UNKNOWN;
+  */
+  return ret;
 }
 
 /*
@@ -941,369 +531,54 @@ RDResult write_ktx2_to_file(FILE *f, const write_tex_data &data)
 }
 */
 
+struct LevelIndexEntry
+{
+  uint64_t offset, length, uncompressedLength;
+};
+
 RDResult load_ktx2_from_file(StreamReader *reader, read_tex_data &ret)
 {
-  uint64_t fileSize = reader->GetSize();
 
-  uint32_t magic = 0;
-  reader->Read(magic);
+  const uint8_t KTX2_ID[12] = {0xAB, 'K', 'T', 'X', ' ', '2', '0', 0xBB, 0x0D, 0x0A, 0x1A, 0x0A};
 
-  KTX2_HEADER header = {};
-  reader->Read(header);
+  uint8_t ident[12] = {};
+  if(!reader->Read(ident, 12))
+    RETURN_ERROR_RESULT(ResultCode::FileIOFailed, "Failed to read KTX2 identifier");
 
-  bool dx10Header = false;
-  KTX2_HEADER_DXT10 headerDXT10 = {};
+  if(memcmp(ident, KTX2_ID, 12) != 0)
+    RETURN_ERROR_RESULT(ResultCode::ImageUnsupported, "Invalid KTX2 magic header");
 
-  if(header.ddspf.dwFlags & DDPF_FOURCC && header.ddspf.dwFourCC == MAKE_FOURCC('D', 'X', '1', '0'))
-  {
-    reader->Read(headerDXT10);
-    dx10Header = true;
-  }
+  KTX2Header header = {};
+  if(!reader->Read(header))
+    RETURN_ERROR_RESULT(ResultCode::FileIOFailed, "Failed to read KTX2 header");
 
-  ret.width = RDCMAX(1U, header.dwWidth);
-  ret.height = RDCMAX(1U, header.dwHeight);
-  ret.depth = RDCMAX(1U, header.dwDepth);
-  ret.slices = dx10Header ? RDCMAX(1U, headerDXT10.arraySize) : 1;
-  ret.mips = RDCMAX(1U, header.dwMipMapCount);
 
-  // maximum dimension of textures)
-  if(ret.width > 0x20000 || ret.height > 0x20000)
-    RDCWARN("Possibly invalid DDS dimension: %u x %u", ret.width, ret.height);
+  uint32_t levelCount = RDCMAX(1U, header.levelCount);
+  rdcarray<LevelIndexEntry> levels;
+  levels.resize(levelCount);
 
-  if(ret.depth > 2048)
-    RDCWARN("Possibly invalid DDS 3D depth: %u", ret.depth);
+   for(uint32_t i = 0; i < levelCount; i++)
+   {
+     if(!reader->Read(levels[i]))
+       RETURN_ERROR_RESULT(ResultCode::FileIOFailed, "Failed to read KTX2 level index");
+   }
 
-  if(ret.slices > 2048)
-    RDCWARN("Possibly invalid DDS array size: %u", ret.slices);
+  // --- 4. Fill texture metadata ---
+  ret.width = header.pixelWidth;
+  ret.height = RDCMAX(1U, header.pixelHeight);
+  ret.depth = RDCMAX(1U, header.pixelDepth);
+  ret.mips = levelCount;
+  //ret.arraysize = RDCMAX(1U, header.layerCount);
+  ret.cubemap = (header.faceCount == 6);
+  ret.format.type = ResourceFormatType::BC7;
+  ret.format.compType = CompType::UNorm;
+  ret.format.compCount = 4;    // assume RGBA until parsing DFD
 
-  if(ret.mips > 18)
-    RDCERR("Invalid DDS mip count: %u", ret.mips);
+  // We don’t read pixel data yet — only metadata.
+  RDCLOG("Loaded minimal KTX2 header: %ux%u, mips=%u", ret.width, ret.height, levelCount);
 
-  uint32_t cubeFlags = DDSCAPS2_CUBEMAP | DDSCAPS2_CUBEMAP_ALLFACES;
 
-  if((header.dwCaps2 & cubeFlags) == cubeFlags && header.dwCaps & DDSCAPS_COMPLEX)
-    ret.cubemap = true;
 
-  if(dx10Header && headerDXT10.miscFlag & DDS_RESOURCE_MISC_TEXTURECUBE)
-    ret.cubemap = true;
+  return ResultCode::Succeeded;
 
-  if(ret.cubemap)
-    ret.slices *= 6;
-
-  bool bgrSwap = false;
-
-  if(dx10Header)
-  {
-    ret.format = DXGIFormat2ResourceFormat(headerDXT10.dxgiFormat);
-    if(ret.format.type == ResourceFormatType::Undefined)
-    {
-      RETURN_ERROR_RESULT(ResultCode::ImageUnsupported, "Unsupported DXGI_FORMAT %u loaded from DDS",
-                          uint32_t(headerDXT10.dxgiFormat));
-    }
-  }
-  else if(header.ddspf.dwFlags & DDPF_FOURCC)
-  {
-    switch(header.ddspf.dwFourCC)
-    {
-      case MAKE_FOURCC('D', 'X', 'T', '1'):
-        ret.format = DXGIFormat2ResourceFormat(DXGI_FORMAT_BC1_UNORM);
-        break;
-      case MAKE_FOURCC('D', 'X', 'T', '2'):
-      case MAKE_FOURCC('D', 'X', 'T', '3'):
-        ret.format = DXGIFormat2ResourceFormat(DXGI_FORMAT_BC2_UNORM);
-        break;
-      case MAKE_FOURCC('D', 'X', 'T', '4'):
-      case MAKE_FOURCC('D', 'X', 'T', '5'):
-        ret.format = DXGIFormat2ResourceFormat(DXGI_FORMAT_BC3_UNORM);
-        break;
-      case MAKE_FOURCC('A', 'T', 'I', '1'):
-      case MAKE_FOURCC('B', 'C', '4', 'U'):
-        ret.format = DXGIFormat2ResourceFormat(DXGI_FORMAT_BC4_UNORM);
-        break;
-      case MAKE_FOURCC('B', 'C', '4', 'S'):
-        ret.format = DXGIFormat2ResourceFormat(DXGI_FORMAT_BC4_SNORM);
-        break;
-      case MAKE_FOURCC('A', 'T', 'I', '2'):
-      case MAKE_FOURCC('B', 'C', '5', 'U'):
-        ret.format = DXGIFormat2ResourceFormat(DXGI_FORMAT_BC5_UNORM);
-        break;
-      case MAKE_FOURCC('B', 'C', '5', 'S'):
-        ret.format = DXGIFormat2ResourceFormat(DXGI_FORMAT_BC5_SNORM);
-        break;
-      case MAKE_FOURCC('R', 'G', 'B', 'G'):
-        ret.format = DXGIFormat2ResourceFormat(DXGI_FORMAT_R8G8_B8G8_UNORM);
-        break;
-      case MAKE_FOURCC('G', 'R', 'G', 'B'):
-        ret.format = DXGIFormat2ResourceFormat(DXGI_FORMAT_G8R8_G8B8_UNORM);
-        break;
-      case MAKE_FOURCC('U', 'Y', 'V', 'Y'): bgrSwap = true; DELIBERATE_FALLTHROUGH();
-      case MAKE_FOURCC('Y', 'U', 'Y', '2'):
-        ret.format = DXGIFormat2ResourceFormat(DXGI_FORMAT_YUY2);
-        break;
-      case 21: ret.format = DXGIFormat2ResourceFormat(DXGI_FORMAT_B8G8R8A8_UNORM); break;
-      case 36: ret.format = DXGIFormat2ResourceFormat(DXGI_FORMAT_R16G16B16A16_UNORM); break;
-      case 82: ret.format = DXGIFormat2ResourceFormat(DXGI_FORMAT_D32_FLOAT); break;
-      case 110: ret.format = DXGIFormat2ResourceFormat(DXGI_FORMAT_R16G16B16A16_SNORM); break;
-      case 111: ret.format = DXGIFormat2ResourceFormat(DXGI_FORMAT_R16_FLOAT); break;
-      case 112: ret.format = DXGIFormat2ResourceFormat(DXGI_FORMAT_R16G16_FLOAT); break;
-      case 113: ret.format = DXGIFormat2ResourceFormat(DXGI_FORMAT_R16G16B16A16_FLOAT); break;
-      case 114: ret.format = DXGIFormat2ResourceFormat(DXGI_FORMAT_R32_FLOAT); break;
-      case 115: ret.format = DXGIFormat2ResourceFormat(DXGI_FORMAT_R32G32_FLOAT); break;
-      case 116: ret.format = DXGIFormat2ResourceFormat(DXGI_FORMAT_R32G32B32A32_FLOAT); break;
-      case 117:
-      {
-        RETURN_ERROR_RESULT(ResultCode::ImageUnsupported,
-                            "Legacy CxV8U8 DDS format is unsupported");
-      }
-
-      default:
-      {
-        RETURN_ERROR_RESULT(
-            ResultCode::ImageUnsupported, "Unsupported DDS FourCC: %c%c%c%c",
-            char((header.ddspf.dwFourCC >> 0) & 0xff), char((header.ddspf.dwFourCC >> 8) & 0xff),
-            char((header.ddspf.dwFourCC >> 16) & 0xff), char((header.ddspf.dwFourCC >> 24) & 0xff));
-      }
-    }
-  }
-  else
-  {
-    if(header.ddspf.dwRGBBitCount != 32 && header.ddspf.dwRGBBitCount != 24 &&
-       header.ddspf.dwRGBBitCount != 16 && header.ddspf.dwRGBBitCount != 8)
-    {
-      RETURN_ERROR_RESULT(ResultCode::ImageUnsupported, "Unsupported RGB bit count %u in DDS file",
-                          header.ddspf.dwRGBBitCount);
-    }
-
-    if(header.ddspf.dwABitMask == 0x0000 && header.ddspf.dwRBitMask == 0xf800 &&
-       header.ddspf.dwGBitMask == 0x07e0 && header.ddspf.dwBBitMask == 0x001f)
-    {
-      ret.format = DXGIFormat2ResourceFormat(DXGI_FORMAT_B5G6R5_UNORM);
-    }
-    else if(header.ddspf.dwABitMask == 0x8000 && header.ddspf.dwRBitMask == 0x7c00 &&
-            header.ddspf.dwGBitMask == 0x03e0 && header.ddspf.dwBBitMask == 0x001f)
-    {
-      ret.format = DXGIFormat2ResourceFormat(DXGI_FORMAT_B5G5R5A1_UNORM);
-    }
-    else if(header.ddspf.dwABitMask == 0xf000 && header.ddspf.dwRBitMask == 0x0f00 &&
-            header.ddspf.dwGBitMask == 0x00f0 && header.ddspf.dwBBitMask == 0x000f)
-    {
-      ret.format = DXGIFormat2ResourceFormat(DXGI_FORMAT_B4G4R4A4_UNORM);
-    }
-    else if(header.ddspf.dwABitMask == 0xff && header.ddspf.dwRBitMask == 0x00 &&
-            header.ddspf.dwGBitMask == 0x00 && header.ddspf.dwBBitMask == 0x00)
-    {
-      ret.format = DXGIFormat2ResourceFormat(DXGI_FORMAT_A8_UNORM);
-    }
-    else
-    {
-      const uint32_t bits[] = {
-          Bits::CountOnes(header.ddspf.dwRBitMask),
-          Bits::CountOnes(header.ddspf.dwGBitMask),
-          Bits::CountOnes(header.ddspf.dwBBitMask),
-          Bits::CountOnes(header.ddspf.dwABitMask),
-      };
-      if((bits[1] != 0 && bits[1] != bits[0]) || (bits[2] != 0 && bits[2] != bits[0]) ||
-         (bits[3] != 0 && bits[3] != bits[0]))
-      {
-        RETURN_ERROR_RESULT(ResultCode::ImageUnsupported,
-                            "Unsupported RGBA mask: %08x %08x %08x %08x", header.ddspf.dwRBitMask,
-                            header.ddspf.dwGBitMask, header.ddspf.dwBBitMask,
-                            header.ddspf.dwABitMask);
-      }
-
-      uint32_t bitWidth = bits[0];
-      for(size_t i = 1; i < 4; i++)
-        if(bits[i] < bits[0] && bits[i] > 0)
-          bitWidth = bits[i];
-
-      if(bitWidth == 0)
-      {
-        RETURN_ERROR_RESULT(ResultCode::ImageUnsupported,
-                            "Unsupported RGBA mask: %08x %08x %08x %08x", header.ddspf.dwRBitMask,
-                            header.ddspf.dwGBitMask, header.ddspf.dwBBitMask,
-                            header.ddspf.dwABitMask);
-      }
-
-      ret.format.compByteWidth = uint8_t(bitWidth / 8);
-      ret.format.compCount = uint8_t(header.ddspf.dwRGBBitCount / bitWidth);
-      ret.format.compType = CompType::UNorm;
-      ret.format.type = ResourceFormatType::Regular;
-
-      if(header.ddspf.dwFlags & DDPF_BUMPDUDV)
-        ret.format.compType = CompType::SNorm;
-
-      if(header.ddspf.dwBBitMask > 0 && header.ddspf.dwBBitMask < header.ddspf.dwRBitMask)
-        ret.format.SetBGRAOrder(true);
-    }
-  }
-
-  uint32_t bytesPerPixel = 1;
-  uint32_t subsamplePacking = 1;
-  switch(ret.format.type)
-  {
-    case ResourceFormatType::S8:
-    case ResourceFormatType::A8: bytesPerPixel = 1; break;
-    case ResourceFormatType::R10G10B10A2:
-    case ResourceFormatType::R9G9B9E5:
-    case ResourceFormatType::R11G11B10:
-    case ResourceFormatType::D24S8: bytesPerPixel = 4; break;
-    case ResourceFormatType::R5G6B5:
-    case ResourceFormatType::R5G5B5A1:
-    case ResourceFormatType::R4G4B4A4: bytesPerPixel = 2; break;
-    case ResourceFormatType::D32S8: bytesPerPixel = 8; break;
-    case ResourceFormatType::YUV8:
-      if(ret.format.YUVPlaneCount() == 1 && ret.format.YUVSubsampling() == 422)
-      {
-        subsamplePacking = 2;
-        bytesPerPixel = 2;
-        break;
-      }
-      DELIBERATE_FALLTHROUGH();
-    case ResourceFormatType::YUV10:
-    case ResourceFormatType::YUV12:
-    case ResourceFormatType::YUV16:
-    case ResourceFormatType::D16S8:
-    case ResourceFormatType::R4G4:
-    {
-      RETURN_ERROR_RESULT(ResultCode::ImageUnsupported,
-                          "Unsupported file format %s to load from DDS",
-                          ToStr(ret.format.type).c_str());
-    }
-    default: bytesPerPixel = ret.format.compCount * ret.format.compByteWidth;
-  }
-
-  bool blockFormat = false;
-
-  if(ret.format.Special())
-  {
-    switch(ret.format.type)
-    {
-      case ResourceFormatType::BC1:
-      case ResourceFormatType::BC2:
-      case ResourceFormatType::BC3:
-      case ResourceFormatType::BC4:
-      case ResourceFormatType::BC5:
-      case ResourceFormatType::BC6:
-      case ResourceFormatType::BC7: blockFormat = true; break;
-      case ResourceFormatType::ETC2:
-      case ResourceFormatType::EAC:
-      case ResourceFormatType::ASTC:
-      {
-        RETURN_ERROR_RESULT(ResultCode::ImageUnsupported,
-                            "Unsupported file format %s to load from DDS",
-                            ToStr(ret.format.type).c_str());
-      }
-      default: break;
-    }
-  }
-
-  // catch any invalid dimensions here, including the total dimension with a very conservative 1/16
-  // byte per pixel
-  if(uint64_t(ret.width) > fileSize || uint64_t(ret.height) > fileSize ||
-     uint64_t(ret.depth) > fileSize || uint64_t(ret.slices) > fileSize ||
-     uint64_t(ret.mips) > fileSize || uint64_t(ret.slices) * ret.mips > fileSize ||
-     (uint64_t(ret.width) * uint64_t(ret.height) * uint64_t(ret.depth) *
-      RDCMAX(uint64_t(ret.slices), uint64_t(RDCMIN(2U, ret.mips)))) /
-             16 >
-         fileSize)
-  {
-    RETURN_ERROR_RESULT(
-        ResultCode::ImageUnsupported,
-        "Invalid dimension (%ux%ux%u) slice count %u or mip count %u loaded from DDS of size %llu",
-        ret.width, ret.height, ret.depth, ret.slices, ret.mips, fileSize);
-  }
-
-  // we reserve space for a full mip-chain (twice the size of the top mip) just to be conservative
-  {
-    uint32_t rowlen = AlignUp(ret.width, subsamplePacking);
-    uint32_t numRows = ret.height;
-    uint32_t pitch = RDCMAX(1U, rowlen * bytesPerPixel);
-
-    // pitch/rows are in blocks, not pixels, for block formats.
-    if(blockFormat)
-    {
-      numRows = RDCMAX(1U, (numRows + 3) / 4);
-
-      uint32_t blockSize =
-          (ret.format.type == ResourceFormatType::BC1 || ret.format.type == ResourceFormatType::BC4)
-              ? 8
-              : 16;
-
-      pitch = RDCMAX(blockSize, (((rowlen + 3) / 4)) * blockSize);
-    }
-
-    ret.buffer.reserve(ret.slices * 2 * ret.depth * numRows * pitch);
-  }
-  ret.subresources.reserve(ret.slices * ret.mips);
-
-  int i = 0;
-  for(uint32_t slice = 0; slice < ret.slices; slice++)
-  {
-    for(uint32_t mip = 0; mip < ret.mips; mip++)
-    {
-      uint32_t rowlen = RDCMAX(1U, ret.width >> mip);
-      rowlen = AlignUp(rowlen, subsamplePacking);
-      uint32_t numRows = RDCMAX(1U, ret.height >> mip);
-      uint32_t numdepths = RDCMAX(1U, ret.depth >> mip);
-      uint32_t pitch = RDCMAX(1U, rowlen * bytesPerPixel);
-
-      // pitch/rows are in blocks, not pixels, for block formats.
-      if(blockFormat)
-      {
-        numRows = RDCMAX(1U, (numRows + 3) / 4);
-
-        uint32_t blockSize = (ret.format.type == ResourceFormatType::BC1 ||
-                              ret.format.type == ResourceFormatType::BC4)
-                                 ? 8
-                                 : 16;
-
-        pitch = RDCMAX(blockSize, (((rowlen + 3) / 4)) * blockSize);
-      }
-
-      size_t subOffs = ret.buffer.size();
-      size_t subSize = numdepths * numRows * pitch;
-
-      ret.subresources.push_back({subOffs, subSize});
-
-      ret.buffer.resize(ret.buffer.size() + subSize);
-
-      byte *bytedata = ret.buffer.data() + subOffs;
-
-      for(uint32_t d = 0; d < numdepths; d++)
-      {
-        for(uint32_t row = 0; row < numRows; row++)
-        {
-          reader->Read(bytedata, pitch);
-
-          if(bgrSwap)
-          {
-            byte *rgba = bytedata;
-
-            if(bytesPerPixel >= 3)
-            {
-              for(uint32_t p = 0; p < rowlen; p++)
-              {
-                std::swap(rgba[0], rgba[2]);
-                rgba += bytesPerPixel;
-              }
-            }
-            else
-            {
-              for(uint32_t p = 0; p < rowlen; p++)
-              {
-                std::swap(rgba[0], rgba[1]);
-                rgba += bytesPerPixel;
-              }
-            }
-          }
-
-          bytedata += pitch;
-        }
-      }
-
-      i++;
-    }
-  }
-
-  return RDResult();
 }
