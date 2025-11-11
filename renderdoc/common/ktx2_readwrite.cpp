@@ -42,6 +42,15 @@ struct KTX2Header
 };
 #pragma pack(pop)
 
+
+struct LevelIndexEntry
+{
+  uint64_t offset;                // byte offset from start of file
+  uint64_t length;                // length of image data
+  uint64_t uncompressedLength;    // may equal length if unsupercompressed
+};
+
+
 enum VkFormat
 {
   VK_FORMAT_UNDEFINED = 0,
@@ -538,12 +547,13 @@ static ResourceFormat VKFormat2ResourceFormat(uint32_t vkFormat)
     return ret;
   }
 
+  // VK_FORMAT_BC7_SRBG_BLOCK
   if(vkFormat == 146)
   {
     ret.type = ResourceFormatType::BC7;
     ret.compCount = 4;
     ret.compByteWidth = 1;
-    ret.compType = CompType::SNorm;
+    ret.compType = CompType::UNormSRGB;
     return ret;
   }
 
@@ -577,14 +587,13 @@ RDResult load_ktx2_from_file(StreamReader *reader, read_tex_data &ret)
 
   
   // 2) validate identifier
-  const uint8_t KTX2_ID[12] = {0xAB, 'K', 'T', 'X', ' ', '2', '0', 0xBB, 0x0D, 0x0A, 0x1A, 0x0A};
   uint8_t ident[12] = {};
   
   if(!mem.Read(ident, 12))
     RETURN_ERROR_RESULT(ResultCode::FileIOFailed, "Failed to read KTX2 identifier");
   
 
-  if(memcmp(ident, KTX2_ID, 12) != 0)
+  if(memcmp(ident, KTX2_IDENTIFIER, 12) != 0)
     RETURN_ERROR_RESULT(ResultCode::ImageUnsupported, "Not a KTX2 file");
 
   // 3) read header
@@ -602,15 +611,6 @@ RDResult load_ktx2_from_file(StreamReader *reader, read_tex_data &ret)
 
   // 4) read level index array (levelCount entries, each 3 x uint64)
   uint32_t levelCount = RDCMAX(1U, header.levelCount);
-
-  #pragma pack(push, 1)
-  struct LevelIndexEntry
-  {
-    uint64_t offset;                // byte offset from start of file
-    uint64_t length;                // length of image data
-    uint64_t uncompressedLength;    // may equal length if unsupercompressed
-  };
-  #pragma pack(pop)
 
   rdcarray<LevelIndexEntry> levels;
   levels.resize(levelCount);
