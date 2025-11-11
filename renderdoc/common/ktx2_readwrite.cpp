@@ -21,39 +21,6 @@ bool is_ktx2_file(const byte *headerBuffer, size_t size)
   return memcmp(headerBuffer, KTX2_IDENTIFIER, 12) == 0;
 }
 
-// from MSDN
-struct KTX2_PIXELFORMAT
-{
-  uint32_t dwSize;
-  uint32_t dwFlags;
-  uint32_t dwFourCC;
-  uint32_t dwRGBBitCount;
-  uint32_t dwRBitMask;
-  uint32_t dwGBitMask;
-  uint32_t dwBBitMask;
-  uint32_t dwABitMask;
-};
-
-struct KTX2_HEADER
-{
-    uint32_t vkFormat;
-    uint32_t typeSize;
-    uint32_t pixelWidth;
-    uint32_t pixelHeight;
-    uint32_t pixelDepth;
-    uint32_t layerCount;
-    uint32_t faceCount;
-    uint32_t levelCount;
-    uint32_t supercompressionScheme;
-
-    uint32_t dfdByteOffset;
-    uint32_t dfdByteLength;
-    uint32_t kvdByteOffset;
-    uint32_t kvdByteLength;
-    uint64_t sgdByteOffset;
-    uint64_t sgdByteLength;
-};
-
 #pragma pack(push, 1)
 struct KTX2Header
 {
@@ -66,27 +33,14 @@ struct KTX2Header
   uint32_t faceCount;
   uint32_t levelCount;
   uint32_t supercompressionScheme;
-
   uint32_t dfdByteOffset;
   uint32_t dfdByteLength;
   uint32_t kvdByteOffset;
   uint32_t kvdByteLength;
-
   uint64_t sgdByteOffset;
   uint64_t sgdByteLength;
 };
 #pragma pack(pop)
-
-
-// from d3d10.h
-enum ktx2_D3D10_RESOURCE_DIMENSION
-{
-  D3D10_RESOURCE_DIMENSION_UNKNOWN = 0,
-  D3D10_RESOURCE_DIMENSION_BUFFER = 1,
-  D3D10_RESOURCE_DIMENSION_TEXTURE1D = 2,
-  D3D10_RESOURCE_DIMENSION_TEXTURE2D = 3,
-  D3D10_RESOURCE_DIMENSION_TEXTURE3D = 4
-};
 
 enum VkFormat
 {
@@ -187,68 +141,94 @@ enum VkFormat
   VK_FORMAT_R16G16B16A16_SSCALED = 94,
   VK_FORMAT_R16G16B16A16_UINT = 95,
   VK_FORMAT_R16G16B16A16_SINT = 96,
-  VK_FORMAT_R16G16B16A16_SFLOAT = 97
+  VK_FORMAT_R16G16B16A16_SFLOAT = 97,
+  VK_FORMAT_R32_UINT = 98,
+  VK_FORMAT_R32_SINT = 99,
+  VK_FORMAT_R32_SFLOAT = 100,
+  VK_FORMAT_R32G32_UINT = 101,
+  VK_FORMAT_R32G32_SINT = 102,
+  VK_FORMAT_R32G32_SFLOAT = 103,
+  VK_FORMAT_R32G32B32_UINT = 104,
+  VK_FORMAT_R32G32B32_SINT = 105,
+  VK_FORMAT_R32G32B32_SFLOAT = 106,
+  VK_FORMAT_R32G32B32A32_UINT = 107,
+  VK_FORMAT_R32G32B32A32_SINT = 108,
+  VK_FORMAT_R32G32B32A32_SFLOAT = 109,
+  VK_FORMAT_R64_UINT = 110,
+  VK_FORMAT_R64_SINT = 111,
+  VK_FORMAT_R64_SFLOAT = 112,
+  VK_FORMAT_R64G64_UINT = 113,
+  VK_FORMAT_R64G64_SINT = 114,
+  VK_FORMAT_R64G64_SFLOAT = 115,
+  VK_FORMAT_R64G64B64_UINT = 116,
+  VK_FORMAT_R64G64B64_SINT = 117,
+  VK_FORMAT_R64G64B64_SFLOAT = 118,
+  VK_FORMAT_R64G64B64A64_UINT = 119,
+  VK_FORMAT_R64G64B64A64_SINT = 120,
+  VK_FORMAT_R64G64B64A64_SFLOAT = 121,
+  VK_FORMAT_B10G11R11_UFLOAT_PACK32 = 122,
+  VK_FORMAT_E5B9G9R9_UFLOAT_PACK32 = 123,
+  VK_FORMAT_D16_UNORM = 124,
+  VK_FORMAT_X8_D24_UNORM_PACK32 = 125,
+  VK_FORMAT_D32_SFLOAT = 126,
+  VK_FORMAT_S8_UINT = 127,
+  VK_FORMAT_D16_UNORM_S8_UINT = 128,
+  VK_FORMAT_D24_UNORM_S8_UINT = 129,
+  VK_FORMAT_D32_SFLOAT_S8_UINT = 130,
+  VK_FORMAT_BC1_RGB_UNORM_BLOCK = 131,
+  VK_FORMAT_BC1_RGB_SRGB_BLOCK = 132,
+  VK_FORMAT_BC1_RGBA_UNORM_BLOCK = 133,
+  VK_FORMAT_BC1_RGBA_SRGB_BLOCK = 134,
+  VK_FORMAT_BC2_UNORM_BLOCK = 135,
+  VK_FORMAT_BC2_SRGB_BLOCK = 136,
+  VK_FORMAT_BC3_UNORM_BLOCK = 137,
+  VK_FORMAT_BC3_SRGB_BLOCK = 138,
+  VK_FORMAT_BC4_UNORM_BLOCK = 139,
+  VK_FORMAT_BC4_SNORM_BLOCK = 140,
+  VK_FORMAT_BC5_UNORM_BLOCK = 141,
+  VK_FORMAT_BC5_SNORM_BLOCK = 142,
+  VK_FORMAT_BC6H_UFLOAT_BLOCK = 143,
+  VK_FORMAT_BC6H_SFLOAT_BLOCK = 144,
+  VK_FORMAT_BC7_UNORM_BLOCK = 145,
+  VK_FORMAT_BC7_SRGB_BLOCK = 146,
+  VK_FORMAT_ETC2_R8G8B8_UNORM_BLOCK = 147,
+  VK_FORMAT_ETC2_R8G8B8_SRGB_BLOCK = 148,
+  VK_FORMAT_ETC2_R8G8B8A1_UNORM_BLOCK = 149,
+  VK_FORMAT_ETC2_R8G8B8A1_SRGB_BLOCK = 150,
+  VK_FORMAT_ETC2_R8G8B8A8_UNORM_BLOCK = 151,
+  VK_FORMAT_ETC2_R8G8B8A8_SRGB_BLOCK = 152,
+  VK_FORMAT_EAC_R11_UNORM_BLOCK = 153,
+  VK_FORMAT_EAC_R11_SNORM_BLOCK = 154,
+  VK_FORMAT_EAC_R11G11_UNORM_BLOCK = 155,
+  VK_FORMAT_EAC_R11G11_SNORM_BLOCK = 156,
+  VK_FORMAT_ASTC_4x4_UNORM_BLOCK = 157,
+  VK_FORMAT_ASTC_4x4_SRGB_BLOCK = 158,
+  VK_FORMAT_ASTC_5x4_UNORM_BLOCK = 159,
+  VK_FORMAT_ASTC_5x4_SRGB_BLOCK = 160,
+  VK_FORMAT_ASTC_5x5_UNORM_BLOCK = 161,
+  VK_FORMAT_ASTC_5x5_SRGB_BLOCK = 162,
+  VK_FORMAT_ASTC_6x5_UNORM_BLOCK = 163,
+  VK_FORMAT_ASTC_6x5_SRGB_BLOCK = 164,
+  VK_FORMAT_ASTC_6x6_UNORM_BLOCK = 165,
+  VK_FORMAT_ASTC_6x6_SRGB_BLOCK = 166,
+  VK_FORMAT_ASTC_8x5_UNORM_BLOCK = 167,
+  VK_FORMAT_ASTC_8x5_SRGB_BLOCK = 168,
+  VK_FORMAT_ASTC_8x6_UNORM_BLOCK = 169,
+  VK_FORMAT_ASTC_8x6_SRGB_BLOCK = 170,
+  VK_FORMAT_ASTC_8x8_UNORM_BLOCK = 171,
+  VK_FORMAT_ASTC_8x8_SRGB_BLOCK = 172,
+  VK_FORMAT_ASTC_10x5_UNORM_BLOCK = 173,
+  VK_FORMAT_ASTC_10x5_SRGB_BLOCK = 174,
+  VK_FORMAT_ASTC_10x6_UNORM_BLOCK = 175,
+  VK_FORMAT_ASTC_10x6_SRGB_BLOCK = 176,
+  VK_FORMAT_ASTC_10x8_UNORM_BLOCK = 177,
+  VK_FORMAT_ASTC_10x8_SRGB_BLOCK = 178,
+  VK_FORMAT_ASTC_10x10_UNORM_BLOCK = 179,
+  VK_FORMAT_ASTC_10x10_SRGB_BLOCK = 180
 };
 
-struct KTX2_HEADER_VK
-{
-  VkFormat vkFormat;
-  ktx2_D3D10_RESOURCE_DIMENSION resourceDimension;
-  uint32_t miscFlag;
-  uint32_t arraySize;
-  uint32_t reserved;
-};
 
-#define DDSD_CAPS 0x1
-#define DDSD_HEIGHT 0x2
-#define DDSD_WIDTH 0x4
-#define DDSD_PITCH 0x8
-#define DDSD_PIXELFORMAT 0x1000
-#define DDSD_MIPMAPCOUNT 0x20000
-#define DDSD_LINEARSIZE 0x80000
-#define DDSD_DEPTH 0x800000
 
-#define DDSCAPS_COMPLEX 0x8
-#define DDSCAPS_MIPMAP 0x400000
-#define DDSCAPS_TEXTURE 0x1000
-
-#define DDSCAPS2_CUBEMAP 0x0200    // d3d10+ requires all cubemap faces
-#define DDSCAPS2_CUBEMAP_ALLFACES 0xfc00
-#define DDSCAPS2_VOLUME 0x200000
-
-#define DDS_RESOURCE_MISC_TEXTURECUBE 0x4
-
-#define DDPF_ALPHAPIXELS 0x1
-#define DDPF_ALPHA 0x2
-#define DDPF_FOURCC 0x4
-#define DDPF_RGB 0x40
-#define DDPF_YUV 0x200
-#define DDPF_LUMINANCE 0x20000
-#define DDPF_BUMPDUDV 0x80000
-#define DDPF_RGBA (DDPF_RGB | DDPF_ALPHAPIXELS)
-
-ResourceFormat VKFormat2ResourceFormat(VkFormat format)
-{
-  ResourceFormat ret;
-  ret.type = ResourceFormatType::BC7;
-  ret.compCount = 4;
-  ret.compByteWidth = 1;
-  ret.compType = CompType::UNorm;
-
-  /*
-  switch(format)
-  {
-    case VK_FORMAT_R8G8B8A8_UNORM: 
-        ret = {ResourceFormatType::ASTC, CompType::UNorm, 4, 1}; 
-        break;
-    default: 
-        ret = {ResourceFormatType::Undefined, CompType::Typeless, 0, 0}; 
-        break;
-
-  }
-  */
-  return ret;
-}
 
 /*
 RDResult write_ktx2_to_file(FILE *f, const write_tex_data &data)
@@ -531,53 +511,181 @@ RDResult write_ktx2_to_file(FILE *f, const write_tex_data &data)
 }
 */
 
-struct LevelIndexEntry
+
+// small mapping for some vk formats we care about (expand as needed)
+static ResourceFormat VKFormat2ResourceFormat(uint32_t vkFormat)
 {
-  uint64_t offset, length, uncompressedLength;
-};
+  ResourceFormat ret;
+  RDCEraseEl(ret);
+
+  // VK_FORMAT_BC7_UNORM_BLOCK == 177 in Vulkan spec
+  if(vkFormat == 177)
+  {
+    ret.type = ResourceFormatType::BC7;
+    ret.compCount = 4;
+    ret.compByteWidth = 1;
+    ret.compType = CompType::UNorm;
+    return ret;
+  }
+
+  // common 8-bit RGBA
+  if(vkFormat == 37)    // VK_FORMAT_R8G8B8A8_UNORM = 37
+  {
+    ret.type = ResourceFormatType::Regular;
+    ret.compCount = 4;
+    ret.compByteWidth = 1;
+    ret.compType = CompType::UNorm;
+    return ret;
+  }
+
+  if(vkFormat == 146)
+  {
+    ret.type = ResourceFormatType::BC7;
+    ret.compCount = 4;
+    ret.compByteWidth = 1;
+    ret.compType = CompType::SNorm;
+    return ret;
+  }
+
+  // fallback: undefined
+  ret.type = ResourceFormatType::Undefined;
+  ret.compCount = 0;
+  ret.compByteWidth = 0;
+  ret.compType = CompType::Typeless;
+  return ret;
+}
 
 RDResult load_ktx2_from_file(StreamReader *reader, read_tex_data &ret)
 {
+  if(!reader)
+    RETURN_ERROR_RESULT(ResultCode::InvalidParameter, "Null reader");
 
+  // 1) read entire stream into memory so we can use absolute offsets safely
+  uint64_t totalSize = reader->GetSize();
+  if(totalSize == 0)
+    RETURN_ERROR_RESULT(ResultCode::FileIOFailed, "Empty stream");
+
+  bytebuf filebuf;
+  filebuf.resize((size_t)totalSize);
+
+  // reader is at start (caller should have reset file), read whole stream
+  if(!reader->Read(filebuf.data(), totalSize))
+    RETURN_ERROR_RESULT(ResultCode::FileIOFailed, "Failed to read full input stream");
+
+  // create a memory-backed StreamReader so SetOffset/Read are trivial
+  StreamReader mem(reader->GetSize() ? filebuf.data() : nullptr, (uint64_t)filebuf.size());
+
+  
+  // 2) validate identifier
   const uint8_t KTX2_ID[12] = {0xAB, 'K', 'T', 'X', ' ', '2', '0', 0xBB, 0x0D, 0x0A, 0x1A, 0x0A};
-
   uint8_t ident[12] = {};
-  if(!reader->Read(ident, 12))
+  
+  if(!mem.Read(ident, 12))
     RETURN_ERROR_RESULT(ResultCode::FileIOFailed, "Failed to read KTX2 identifier");
+  
 
   if(memcmp(ident, KTX2_ID, 12) != 0)
-    RETURN_ERROR_RESULT(ResultCode::ImageUnsupported, "Invalid KTX2 magic header");
+    RETURN_ERROR_RESULT(ResultCode::ImageUnsupported, "Not a KTX2 file");
 
+  // 3) read header
   KTX2Header header = {};
-  if(!reader->Read(header))
+  if(!mem.Read(header))
     RETURN_ERROR_RESULT(ResultCode::FileIOFailed, "Failed to read KTX2 header");
 
+  // minimal check
+  if(header.pixelWidth == 0 || header.pixelHeight == 0)
+    RETURN_ERROR_RESULT(ResultCode::ImageUnsupported, "Invalid KTX2 dimensions");
 
+  // only support no supercompression for this minimal loader
+  if(header.supercompressionScheme != 0)
+    RETURN_ERROR_RESULT(ResultCode::ImageUnsupported, "Supercompression not supported yet");
+
+  // 4) read level index array (levelCount entries, each 3 x uint64)
   uint32_t levelCount = RDCMAX(1U, header.levelCount);
+
+  #pragma pack(push, 1)
+  struct LevelIndexEntry
+  {
+    uint64_t offset;                // byte offset from start of file
+    uint64_t length;                // length of image data
+    uint64_t uncompressedLength;    // may equal length if unsupercompressed
+  };
+  #pragma pack(pop)
+
   rdcarray<LevelIndexEntry> levels;
   levels.resize(levelCount);
 
-   for(uint32_t i = 0; i < levelCount; i++)
-   {
-     if(!reader->Read(levels[i]))
-       RETURN_ERROR_RESULT(ResultCode::FileIOFailed, "Failed to read KTX2 level index");
-   }
+  for(uint32_t i = 0; i < levelCount; ++i)
+  {
+    if(!mem.Read(levels[i]))
+      RETURN_ERROR_RESULT(ResultCode::FileIOFailed, "Failed to read level index");
+  }
 
-  // --- 4. Fill texture metadata ---
+  // 5) fill metadata
   ret.width = header.pixelWidth;
   ret.height = RDCMAX(1U, header.pixelHeight);
   ret.depth = RDCMAX(1U, header.pixelDepth);
-  ret.mips = levelCount;
-  //ret.arraysize = RDCMAX(1U, header.layerCount);
+  uint32_t slices = header.layerCount > 0 ? header.layerCount : 1;
   ret.cubemap = (header.faceCount == 6);
-  ret.format.type = ResourceFormatType::BC7;
-  ret.format.compType = CompType::UNorm;
-  ret.format.compCount = 4;    // assume RGBA until parsing DFD
+  if(ret.cubemap)
+    slices *= 6;
+  ret.slices = slices;
+  ret.mips = levelCount;
 
-  // We don’t read pixel data yet — only metadata.
-  RDCLOG("Loaded minimal KTX2 header: %ux%u, mips=%u", ret.width, ret.height, levelCount);
+  // 6) map vkFormat -> ResourceFormat (you can expand mapping as needed)
+  ret.format = VKFormat2ResourceFormat(header.vkFormat);
+  if(ret.format.type == ResourceFormatType::Undefined)
+  {
+    // if not known, mark unsupported for now
+    RETURN_ERROR_RESULT(ResultCode::ImageUnsupported, "Unsupported vkFormat %u", header.vkFormat);
+  }
+
+  // 7) read each level's data and append into ret.buffer, record subresources
+  size_t curOff = 0;
+  ret.buffer.clear();
+  ret.subresources.clear();
+  ret.subresources.reserve((size_t)ret.slices * ret.mips);
+
+  for(uint32_t slice = 0; slice < ret.slices; ++slice)
+  {
+    for(uint32_t mip = 0; mip < ret.mips; ++mip)
+    {
+      uint32_t levelIndex =
+          mip;    // KTX2 level entries are per-level; array/cubemap splitting handled in indexing semantics
+      const LevelIndexEntry &li = levels[levelIndex];
+
+      if(li.length == 0)
+      {
+        // empty level: push zero-sized subresource
+        ret.subresources.push_back({curOff, 0});
+        continue;
+      }
+
+      // set mem reader to absolute offset then read
+      mem.SetOffset(li.offset);
+
+      size_t sz = (size_t)li.length;
+      size_t prevSize = ret.buffer.size();
+      ret.buffer.resize(prevSize + sz);
+
+      uint64_t curPos = reader->GetOffset();
+      uint64_t fileSize = reader->GetSize();
+
+      RDCLOG("Trying to read %llu bytes at offset %llu (fileSize = %llu)", (unsigned long long)sz,
+             (unsigned long long)curPos, (unsigned long long)fileSize);
 
 
+      if(!mem.Read(ret.buffer.data() + prevSize, sz))
+        RETURN_ERROR_RESULT(ResultCode::FileIOFailed, "Failed to read level image data");
+
+      ret.subresources.push_back({prevSize, sz});
+      curOff = prevSize + sz;
+    }
+  }
+
+  // 8) done
+  RDCLOG("KTX2 loaded: %ux%u, mips=%u, slices=%u, format vk=%u -> %s", ret.width, ret.height,
+         ret.mips, ret.slices, header.vkFormat, ret.format.Name().c_str());
 
   return ResultCode::Succeeded;
 
