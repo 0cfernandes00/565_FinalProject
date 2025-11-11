@@ -544,6 +544,13 @@ static ResourceFormat VKFormat2ResourceFormat(uint32_t vkFormat)
       ret.compType = CompType::UNorm;
       break;
 
+    case 145:   // VK_FORMAT_BC7_UNORM_BLOCK
+        ret.type = ResourceFormatType::BC7;
+        ret.compCount = 4;
+        ret.compByteWidth = 1;
+        ret.compType = CompType::UNorm;
+        break;
+
     case 146:    // VK_FORMAT_BC7_SRBG_BLOCK
       ret.type = ResourceFormatType::BC7;
       ret.compCount = 4;
