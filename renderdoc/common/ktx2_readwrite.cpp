@@ -544,6 +544,48 @@ static ResourceFormat VKFormat2ResourceFormat(uint32_t vkFormat)
       ret.compType = CompType::UNorm;
       break;
 
+    case 131: // VK_FORMAT_BC1_RGB_UNORM_BLOCK
+        break;
+
+    case 132: // VK_FORMAT_BC1_RGB_SRGB_BLOCK
+        break;
+
+    case 133: // VK_FORMAT_BC1_RGBA_UNORM_BLOCK
+        break;
+          
+    case 134: // VK_FORMAT_BC1_RGBA_SRGB_BLOCK
+        break;
+
+    case 135: // VK_FORMAT_BC2_UNORM_BLOCK
+        break;
+
+    case 136: // VK_FORMAT_BC2_SRGB_BLOCK
+        break;
+
+    case 137: // VK_FORMAT_BC3_UNORM_BLOCK
+        break;
+
+    case 138: // VK_FORMAT_BC3_SRGB_BLOCK
+        break;
+
+    case 139: // VK_FORMAT_BC4_UNORM_BLOCK
+        break;
+
+    case 140: // VK_FORMAT_BC4_SNORM_BLOCK
+        break;
+
+    case 141: // VK_FORMAT_BC5_UNORM_BLOCK
+        break;
+
+    case 142: // VK_FORMAT_BC5_SNORM_BLOCK
+        break;
+
+    case 143: // VK_FORMAT_BC6H_UFLOAT_BLOCK
+        break;
+
+    case 144: // VK_FORMAT_BC6H_SFLOAT_BLOCK
+        break;
+
     case 145:   // VK_FORMAT_BC7_UNORM_BLOCK
         ret.type = ResourceFormatType::BC7;
         ret.compCount = 4;
@@ -551,7 +593,7 @@ static ResourceFormat VKFormat2ResourceFormat(uint32_t vkFormat)
         ret.compType = CompType::UNorm;
         break;
 
-    case 146:    // VK_FORMAT_BC7_SRBG_BLOCK
+    case 146:    // VK_FORMAT_BC7_SRGB_BLOCK
       ret.type = ResourceFormatType::BC7;
       ret.compCount = 4;
       ret.compByteWidth = 1;
