@@ -7,7 +7,6 @@
 #include "os/os_specific.h"
 #include "serialise/streamio.h"
 #include <vector>
-#include <iostream>
 
 
 static const uint8_t KTX2_IDENTIFIER[12] = {0xAB, 'K',  'T',  'X',  ' ',  '2',
@@ -527,43 +526,42 @@ static ResourceFormat VKFormat2ResourceFormat(uint32_t vkFormat)
 {
   ResourceFormat ret;
   RDCEraseEl(ret);
-  switch(vkFormat)
+
+  // VK_FORMAT_BC7_UNORM_BLOCK == 177 in Vulkan spec
+  if(vkFormat == 177)
   {
-    case 177:    // VK_FORMAT_BC7_UNORM_BLOCK == 177 in Vulkan spec
-      ret.type = ResourceFormatType::BC7;
-      ret.compCount = 4;
-      ret.compByteWidth = 1;
-      ret.compType = CompType::UNorm;
-      break;
-
-    case 37:    // common 8-bit RGBA
-      // VK_FORMAT_R8G8B8A8_UNORM = 37
-      ret.type = ResourceFormatType::Regular;
-      ret.compCount = 4;
-      ret.compByteWidth = 1;
-      ret.compType = CompType::UNorm;
-      break;
-
-    case 146:    // VK_FORMAT_BC7_SRBG_BLOCK
-      ret.type = ResourceFormatType::BC7;
-      ret.compCount = 4;
-      ret.compByteWidth = 1;
-      ret.compType = CompType::UNormSRGB;
-      break;
-
-    case 159:    // VK_FORMAT_ASTC_5x4_UNORM_BLOCK
-      ret.type = ResourceFormatType::ASTC;
-      ret.compCount = 4;
-      ret.compByteWidth = 1;
-      ret.compType = CompType::UNorm;
-      break;
-
-    default:    // fallback: undefined
-      ret.type = ResourceFormatType::Undefined;
-      ret.compCount = 0;
-      ret.compByteWidth = 0;
-      ret.compType = CompType::Typeless;
+    ret.type = ResourceFormatType::BC7;
+    ret.compCount = 4;
+    ret.compByteWidth = 1;
+    ret.compType = CompType::UNorm;
+    return ret;
   }
+
+  // common 8-bit RGBA
+  if(vkFormat == 37)    // VK_FORMAT_R8G8B8A8_UNORM = 37
+  {
+    ret.type = ResourceFormatType::Regular;
+    ret.compCount = 4;
+    ret.compByteWidth = 1;
+    ret.compType = CompType::UNorm;
+    return ret;
+  }
+
+  // VK_FORMAT_BC7_SRBG_BLOCK
+  if(vkFormat == 146)
+  {
+    ret.type = ResourceFormatType::BC7;
+    ret.compCount = 4;
+    ret.compByteWidth = 1;
+    ret.compType = CompType::UNormSRGB;
+    return ret;
+  }
+
+  // fallback: undefined
+  ret.type = ResourceFormatType::Undefined;
+  ret.compCount = 0;
+  ret.compByteWidth = 0;
+  ret.compType = CompType::Typeless;
   return ret;
 }
 
