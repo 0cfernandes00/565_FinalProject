@@ -545,10 +545,18 @@ static ResourceFormat VKFormat2ResourceFormat(uint32_t vkFormat)
       break;
 
     case 131: // VK_FORMAT_BC1_RGB_UNORM_BLOCK
-        break;
+      ret.type = ResourceFormatType::BC1;
+      ret.compCount = 4;
+      ret.compByteWidth = 1;
+      ret.compType = CompType::UNorm;
+      break;
 
     case 132: // VK_FORMAT_BC1_RGB_SRGB_BLOCK
-        break;
+      ret.type = ResourceFormatType::BC1;
+      ret.compCount = 4;
+      ret.compByteWidth = 1;
+      ret.compType = CompType::UNormSRGB;
+      break;
 
     case 133: // VK_FORMAT_BC1_RGBA_UNORM_BLOCK
         break;
@@ -557,10 +565,18 @@ static ResourceFormat VKFormat2ResourceFormat(uint32_t vkFormat)
         break;
 
     case 135: // VK_FORMAT_BC2_UNORM_BLOCK
-        break;
+      ret.type = ResourceFormatType::BC2;
+      ret.compCount = 4;
+      ret.compByteWidth = 1;
+      ret.compType = CompType::UNorm;
+      break;
 
     case 136: // VK_FORMAT_BC2_SRGB_BLOCK
-        break;
+      ret.type = ResourceFormatType::BC2;
+      ret.compCount = 4;
+      ret.compByteWidth = 1;
+      ret.compType = CompType::UNormSRGB;
+      break;
 
     case 137: // VK_FORMAT_BC3_UNORM_BLOCK
         ret.type = ResourceFormatType::BC3;
