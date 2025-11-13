@@ -1,8 +1,8 @@
-# RenderDoc KTX Viewer
+# VSCode and RenderDoc KTX2 Viewer
 
 [Milestone 1 Powerpoint](https://docs.google.com/presentation/d/1itA7_H42KUoN_OxyCpAzT4X0u9w1Le3G9WOGZeSx79Q/edit?usp=sharing)
 
-For this project, our goal is to implement an HDR KTX Viewer inside of RenderDoc. We had 5 weeks to implement it and 4 team members in our group.
+For this project, our goal is to implement an HDR KTX Viewer inside of RenderDoc and VSCode. We had 5 weeks to implement it and 4 team members in our group.
 
 references:
 - [KTX File Format Specification](https://registry.khronos.org/KTX/specs/2.0/ktxspec.v2.html)
