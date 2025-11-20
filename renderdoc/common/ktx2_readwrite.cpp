@@ -9,6 +9,12 @@
 #include <vector>
 #include <iostream>
 
+#include "basisu/basisu_transcoder.h"
+
+#define KTX2_SUPERCOMPRESSION_UASTC 1
+#define KTX2_SUPERCOMPRESSION_ETC1S 2
+
+static bool basisInit = false;
 
 static const uint8_t KTX2_IDENTIFIER[12] = {0xAB, 'K',  'T',  'X',  ' ',  '2',
                                             '0',  0xBB, 0x0D, 0x0A, 0x1A, 0x0A};
@@ -559,18 +565,18 @@ static ResourceFormat VKFormat2ResourceFormat(uint32_t vkFormat)
       break;
 
     case 133: // VK_FORMAT_BC1_RGBA_UNORM_BLOCK
-        ret.type = ResourceFormatType::BC1;
-        ret.compCount = 4;
-        ret.compByteWidth = 1;
-        ret.compType = CompType::UNorm;
-        break;
+      ret.type = ResourceFormatType::BC1;
+      ret.compCount = 4;
+      ret.compByteWidth = 1;
+      ret.compType = CompType::UNorm;
+      break;
           
     case 134: // VK_FORMAT_BC1_RGBA_SRGB_BLOCK
-        ret.type = ResourceFormatType::BC1;
-        ret.compCount = 4;
-        ret.compByteWidth = 1;
-        ret.compType = CompType::UNormSRGB;
-        break;
+      ret.type = ResourceFormatType::BC1;
+      ret.compCount = 4;
+      ret.compByteWidth = 1;
+      ret.compType = CompType::UNormSRGB;
+      break;
 
     case 135: // VK_FORMAT_BC2_UNORM_BLOCK
       ret.type = ResourceFormatType::BC2;
@@ -648,6 +654,12 @@ static ResourceFormat VKFormat2ResourceFormat(uint32_t vkFormat)
       ret.compType = CompType::UNormSRGB;
       break;
 
+    case 152: 
+      ret.type = ResourceFormatType::ETC2; 
+      ret.compCount = 4;
+      ret.compByteWidth = 1;
+      ret.compType = CompType::UNormSRGB;
+
     case 159:    // VK_FORMAT_ASTC_5x4_UNORM_BLOCK
       ret.type = ResourceFormatType::ASTC;
       ret.compCount = 4;
@@ -664,128 +676,372 @@ static ResourceFormat VKFormat2ResourceFormat(uint32_t vkFormat)
   return ret;
 }
 
+struct KTX2_ETC1S_GlobalData
+{
+  uint32_t endpointCount;
+  uint32_t selectorCount;
+  uint32_t endpointsByteLength;
+  uint32_t selectorsByteLength;
+  uint8_t endpoints;
+  uint8_t selectors;
+};
+
+
 RDResult load_ktx2_from_file(StreamReader *reader, read_tex_data &ret)
 {
+  if(!basisInit)
+  {
+    basisInit = true;
+    basist::basisu_transcoder_init();
+  }
+
   if(!reader)
     RETURN_ERROR_RESULT(ResultCode::InvalidParameter, "Null reader");
 
-  // 1) read entire stream into memory so we can use absolute offsets safely
-  uint64_t totalSize = reader->GetSize();
-  if(totalSize == 0)
+  // 1) read whole file into memory exactly once
+  uint64_t fileSize = reader->GetSize();
+  if(fileSize == 0)
     RETURN_ERROR_RESULT(ResultCode::FileIOFailed, "Empty stream");
 
   bytebuf filebuf;
-  filebuf.resize((size_t)totalSize);
+  filebuf.resize((size_t)fileSize);
 
-  // reader is at start (caller should have reset file), read whole stream
-  if(!reader->Read(filebuf.data(), totalSize))
+  // read full stream into filebuf
+  if(!reader->Read(filebuf.data(), filebuf.size()))
     RETURN_ERROR_RESULT(ResultCode::FileIOFailed, "Failed to read full input stream");
 
-  // create a memory-backed StreamReader so SetOffset/Read are trivial
-  StreamReader mem(reader->GetSize() ? filebuf.data() : nullptr, (uint64_t)filebuf.size());
+  // memory-backed helper reader (so SetOffset/Read work)
+  StreamReader mem(filebuf.data(), (uint64_t)filebuf.size());
 
-  
-  // 2) validate identifier
+  const uint8_t KTX2_ID[12] = {0xAB, 'K', 'T', 'X', ' ', '2', '0', 0xBB, 0x0D, 0x0A, 0x1A, 0x0A};
   uint8_t ident[12] = {};
-  
   if(!mem.Read(ident, 12))
     RETURN_ERROR_RESULT(ResultCode::FileIOFailed, "Failed to read KTX2 identifier");
-  
-
-  if(memcmp(ident, KTX2_IDENTIFIER, 12) != 0)
+  if(memcmp(ident, KTX2_ID, 12) != 0)
     RETURN_ERROR_RESULT(ResultCode::ImageUnsupported, "Not a KTX2 file");
 
-  // 3) read header
-  KTX2Header header = {};
-  if(!mem.Read(header))
-    RETURN_ERROR_RESULT(ResultCode::FileIOFailed, "Failed to read KTX2 header");
-
-  // minimal check
-  if(header.pixelWidth == 0 || header.pixelHeight == 0)
-    RETURN_ERROR_RESULT(ResultCode::ImageUnsupported, "Invalid KTX2 dimensions");
-
-  // only support no supercompression for this minimal loader
-  if(header.supercompressionScheme != 0)
-    RETURN_ERROR_RESULT(ResultCode::ImageUnsupported, "Supercompression not supported yet");
-
-  // 4) read level index array (levelCount entries, each 3 x uint64)
-  uint32_t levelCount = RDCMAX(1U, header.levelCount);
-
-  rdcarray<LevelIndexEntry> levels;
-  levels.resize(levelCount);
-
-  for(uint32_t i = 0; i < levelCount; ++i)
+  // 2) Use ktx2_transcoder to parse the KTX2 (this fills header, level index, DFD, etc)
+  basist::ktx2_transcoder kt2;
+  if(kt2.init(filebuf.data(), (uint32_t)filebuf.size()))
   {
-    if(!mem.Read(levels[i]))
-      RETURN_ERROR_RESULT(ResultCode::FileIOFailed, "Failed to read level index");
-  }
+    // read basic metadata from transcoder
+    const uint32_t width = kt2.get_width();
+    const uint32_t height = kt2.get_height();
+    const uint32_t levelCount = kt2.get_levels();
+    const uint32_t faceCount = kt2.get_faces();      // 1 or 6
+    const uint32_t layerCount = kt2.get_layers();    // 0 means no layers
+    if(width == 0 || height == 0)
+      RETURN_ERROR_RESULT(ResultCode::ImageUnsupported, "Invalid KTX2 dimensions");
 
-  // 5) fill metadata
-  ret.width = header.pixelWidth;
-  ret.height = RDCMAX(1U, header.pixelHeight);
-  ret.depth = RDCMAX(1U, header.pixelDepth);
-  uint32_t slices = header.layerCount > 0 ? header.layerCount : 1;
-  ret.cubemap = (header.faceCount == 6);
-  if(ret.cubemap)
-    slices *= 6;
-  ret.slices = slices;
-  ret.mips = levelCount;
+    // compute slices (layers * faces). layerCount==0 => 1
+    const uint32_t layers = layerCount > 0 ? layerCount : 1;
+    const uint32_t faces = faceCount > 0 ? faceCount : 1;
+    const uint32_t slices = layers * faces;
 
-  // 6) map vkFormat -> ResourceFormat (you can expand mapping as needed)
-  ret.format = VKFormat2ResourceFormat(header.vkFormat);
-  if(ret.format.type == ResourceFormatType::Undefined)
-  {
-    // if not known, mark unsupported for now
-    RETURN_ERROR_RESULT(ResultCode::ImageUnsupported, "Unsupported vkFormat %u", header.vkFormat);
-  }
+    // fill ret metadata
+    ret.width = width;
+    ret.height = RDCMAX(1U, height);
+    ret.depth = 1;
+    ret.slices = slices;
+    ret.cubemap = (faceCount == 6);
+    ret.mips = levelCount;
 
-  // 7) read each level's data and append into ret.buffer, record subresources
-  size_t curOff = 0;
-  ret.buffer.clear();
-  ret.subresources.clear();
-  ret.subresources.reserve((size_t)ret.slices * ret.mips);
-
-  for(uint32_t slice = 0; slice < ret.slices; ++slice)
-  {
-    for(uint32_t mip = 0; mip < ret.mips; ++mip)
+    // If the file is basis-compressed (ETC1S or UASTC) -> use kt2 transcode API
+    const bool isBasis = kt2.is_etc1s() || kt2.is_uastc();
+    if(isBasis)
     {
-      uint32_t levelIndex =
-          mip;    // KTX2 level entries are per-level; array/cubemap splitting handled in indexing semantics
-      const LevelIndexEntry &li = levels[levelIndex];
+      if(!kt2.start_transcoding())
+        RETURN_ERROR_RESULT(ResultCode::ImageUnsupported,
+                            "ktx2_transcoder::start_transcoding failed");
 
-      if(li.length == 0)
+      // We'll decode to tightly-packed RGBA8 on the CPU for RenderDoc's proxy path.
+      const basist::transcoder_texture_format targetFmt =
+          basist::transcoder_texture_format::cTFRGBA32;
+
+      // prepare output storage and subresource list
+      ret.buffer.clear();
+      ret.subresources.clear();
+      // reserve approx space
+      ret.buffer.reserve((size_t)width * (size_t)height * 4 * ret.mips *
+                         (ret.slices ? ret.slices : 1));
+
+      // Iterate slices then mips to produce subresource ordering slice*mips + mip
+      for(uint32_t slice = 0; slice < ret.slices; ++slice)
       {
-        // empty level: push zero-sized subresource
-        ret.subresources.push_back({curOff, 0});
+        // map slice -> (layer, face)
+        uint32_t layer = slice / faces;
+        uint32_t face = slice % faces;
+
+        for(uint32_t mip = 0; mip < ret.mips; ++mip)
+        {
+          basist::ktx2_image_level_info lvlInfo;
+          if(!kt2.get_image_level_info(lvlInfo, mip, layer, face))
+            RETURN_ERROR_RESULT(ResultCode::ImageUnsupported,
+                                "ktx2_transcoder::get_image_level_info failed (slice=%u mip=%u)",
+                                slice, mip);
+
+          uint32_t mipW = RDCMAX(1U, lvlInfo.m_orig_width);
+          uint32_t mipH = RDCMAX(1U, lvlInfo.m_orig_height);
+          uint32_t pixels = mipW * mipH;
+          size_t bytes = (size_t)pixels * 4;
+
+          size_t prev = ret.buffer.size();
+          ret.buffer.resize(prev + bytes);
+
+          // transcode to RGBA32; output buffer is pixels (not bytes) for RGBA32 mode
+          bool ok = kt2.transcode_image_level(
+              mip,      // level_index
+              layer,    // layer_index
+              face,     // face_index
+              ret.buffer.data() + prev,
+              pixels,    // output_blocks_buf_size_in_blocks_or_pixels
+              targetFmt,
+              0,    // decode_flags
+              0,    // output_row_pitch_in_blocks_or_pixels (0 == tightly packed)
+              0     // output_rows_in_pixels (0 == all rows)
+          );
+
+          if(!ok)
+            RETURN_ERROR_RESULT(ResultCode::ImageUnsupported,
+                                "ktx2_transcoder::transcode_image_level failed (slice=%u mip=%u)",
+                                slice, mip);
+
+          ret.subresources.push_back({prev, bytes});
+        }
+      }
+
+      // We decoded to RGBA8 UNorm on CPU.
+      ResourceFormat rgba8;
+      RDCEraseEl(rgba8);
+      rgba8.type = ResourceFormatType::Regular;
+      rgba8.compCount = 4;
+      rgba8.compByteWidth = 1;
+      rgba8.compType = CompType::UNorm;
+      ret.format = rgba8;
+
+      RDCLOG("KTX2 Basis decoded: %ux%u, mips=%u, slices=%u", ret.width, ret.height, ret.mips,
+             ret.slices);
+      return ResultCode::Succeeded;
+    }
+
+    // Not Basis-compressed: treat as raw/passthrough KTX2 levels.
+    // Use the level index from the transcoder (packed_uint handled via get_uint64()/get()).
+    const basisu::vector<basist::ktx2_level_index> &levels = kt2.get_level_index();
+
+    // calculate total expected data size and copy per-level payloads into ret.buffer.
+    ret.buffer.clear();
+    ret.subresources.clear();
+    ret.buffer.reserve((size_t)filebuf.size());    // conservative
+
+    // For each mip we read the level bytes. KTX2 stores level payloads per-level.
+    // For array/cubemap textures the level payload typically contains data for all layers/faces.
+    // We therefore split each level payload evenly across 'slices' if slices>1. This is a common
+    // layout for KTX2 (each image for a layer/face has identical encoded size per-level).
+    for(uint32_t mip = 0; mip < levelCount; ++mip)
+    {
+      const basist::ktx2_level_index &li = levels[mip];
+
+      // extract packed_uint fields safely
+      uint64_t offset = li.m_byte_offset.get_uint64();    // offset into filebuf
+      uint64_t length = li.m_byte_length.get_uint64();    // bytes for this whole level
+      // uint64_t uncompressedLength = li.m_uncompressed_byte_length.get_uint64();
+
+      if(length == 0)
+      {
+        // push zero-sized subresources for each slice
+        for(uint32_t slice = 0; slice < ret.slices; ++slice)
+        {
+          // subresource index ordering: slice*mips + mip
+          ret.subresources.push_back({ret.buffer.size(), 0});
+        }
         continue;
       }
 
-      // set mem reader to absolute offset then read
-      mem.SetOffset(li.offset);
+      // bounds check: ensure level bytes are within filebuf
+      if(offset + length > filebuf.size())
+        RETURN_ERROR_RESULT(ResultCode::FileIOFailed, "KTX2 level index out of range");
 
-      size_t sz = (size_t)li.length;
-      size_t prevSize = ret.buffer.size();
-      ret.buffer.resize(prevSize + sz);
+      // If multiple slices, attempt to split equally per-slice. Validate divisibility; if not
+      // divisible, fall back to single subresource (whole level) and let higher layers handle it.
+      if(ret.slices > 1)
+      {
+        // If the file actually concatenates per-slice images equally (typical), we can split.
+        if(length % ret.slices == 0)
+        {
+          size_t perSlice = (size_t)(length / ret.slices);
+          for(uint32_t slice = 0; slice < ret.slices; ++slice)
+          {
+            size_t prev = ret.buffer.size();
+            ret.buffer.resize(prev + perSlice);
+            memcpy(ret.buffer.data() + prev, filebuf.data() + offset + (size_t)slice * perSlice,
+                   perSlice);
 
-      uint64_t curPos = reader->GetOffset();
-      uint64_t fileSize = reader->GetSize();
+            // push at index slice*mips + mip
+            ret.subresources.push_back({prev, perSlice});
+          }
+        }
+        else
+        {
+          // Not equally split: copy the whole level once and set subresource for each slice to
+          // point to the appropriate span (best effort: replicate blocks). Simpler fallback: copy
+          // whole level once and create one subresource per slice referencing the same data (this
+          // is safer than misligned splits).
+          size_t prev = ret.buffer.size();
+          ret.buffer.resize(prev + (size_t)length);
+          memcpy(ret.buffer.data() + prev, filebuf.data() + offset, (size_t)length);
 
-      RDCLOG("Trying to read %llu bytes at offset %llu (fileSize = %llu)", (unsigned long long)sz,
-             (unsigned long long)curPos, (unsigned long long)fileSize);
-
-
-      if(!mem.Read(ret.buffer.data() + prevSize, sz))
-        RETURN_ERROR_RESULT(ResultCode::FileIOFailed, "Failed to read level image data");
-
-      ret.subresources.push_back({prevSize, sz});
-      curOff = prevSize + sz;
+          // point every slice at the whole level payload (non-ideal but safe)
+          for(uint32_t slice = 0; slice < ret.slices; ++slice)
+            ret.subresources.push_back({prev, (size_t)length});
+        }
+      }
+      else
+      {
+        // single-slice (normal 2D) -> copy level payload
+        size_t prev = ret.buffer.size();
+        ret.buffer.resize(prev + (size_t)length);
+        memcpy(ret.buffer.data() + prev, filebuf.data() + offset, (size_t)length);
+        ret.subresources.push_back({prev, (size_t)length});
+      }
     }
+
+    // Now ensure ret.subresources count is slices * mips. If we produced per-mip entries only and
+    // slices==1, that is fine. If slices>1 and we pushed per-slice per-mip above, the count should
+    // match. If not, try to repair by duplicating last subresource (best-effort).
+    const size_t expectedCount = (size_t)ret.slices * (size_t)ret.mips;
+    if(ret.subresources.size() != expectedCount)
+    {
+      // attempt to fix: if we have exactly ret.mips entries and slices>1, replicate each per-slice
+      if(ret.slices > 1 && ret.subresources.size() == ret.mips)
+      {
+        rdcarray<rdcpair<size_t, size_t>> old = ret.subresources;
+        ret.subresources.clear();
+        ret.subresources.reserve(expectedCount);
+        for(uint32_t slice = 0; slice < ret.slices; ++slice)
+        {
+          for(uint32_t mip = 0; mip < ret.mips; ++mip)
+            ret.subresources.push_back(old[mip]);
+        }
+      }
+      else
+      {
+        RDCWARN("KTX2: unexpected subresource count %zu (expected %zu).", ret.subresources.size(),
+                expectedCount);
+        // fall through; ImageViewer/CreateProxyTexture may catch unsupported shape
+      }
+    }
+
+    // Map vk format found in the parsed header to a ResourceFormat; prefer kt2.get_header().m_vk_format
+    const basist::ktx2_header &hdr = kt2.get_header();
+    ret.format = VKFormat2ResourceFormat(hdr.m_vk_format);
+    if(ret.format.type == ResourceFormatType::Undefined)
+    {
+      // If unknown VK format, still succeed if we have raw bytes. But prefer to indicate unsupported.
+      RETURN_ERROR_RESULT(ResultCode::ImageUnsupported, "Unsupported vkFormat %u",
+                          (uint32_t)hdr.m_vk_format);
+    }
+
+    RDCLOG("KTX2 raw passthrough: %ux%u, mips=%u, slices=%u, vkFormat=%u", ret.width, ret.height,
+           ret.mips, ret.slices, (uint32_t)hdr.m_vk_format);
+
+    return ResultCode::Succeeded;
+
   }
+  else
+  {
 
-  // 8) done
-  RDCLOG("KTX2 loaded: %ux%u, mips=%u, slices=%u, format vk=%u -> %s", ret.width, ret.height,
-         ret.mips, ret.slices, header.vkFormat, ret.format.Name().c_str());
+      // 3) read header
+    KTX2Header header = {};
+    if(!mem.Read(header))
+      RETURN_ERROR_RESULT(ResultCode::FileIOFailed, "Failed to read KTX2 header");
 
-  return ResultCode::Succeeded;
+    // minimal check
+    if(header.pixelWidth == 0 || header.pixelHeight == 0)
+      RETURN_ERROR_RESULT(ResultCode::ImageUnsupported, "Invalid KTX2 dimensions");
+
+    // only support no supercompression for this minimal loader
+    if(header.supercompressionScheme != 0)
+      RETURN_ERROR_RESULT(ResultCode::ImageUnsupported, "Supercompression not supported yet");
+
+    // 4) read level index array (levelCount entries, each 3 x uint64)
+    uint32_t levelCount = RDCMAX(1U, header.levelCount);
+
+    rdcarray<LevelIndexEntry> levels;
+    levels.resize(levelCount);
+
+    for(uint32_t i = 0; i < levelCount; ++i)
+    {
+      if(!mem.Read(levels[i]))
+        RETURN_ERROR_RESULT(ResultCode::FileIOFailed, "Failed to read level index");
+    }
+
+    // 5) fill metadata
+    ret.width = header.pixelWidth;
+    ret.height = RDCMAX(1U, header.pixelHeight);
+    ret.depth = RDCMAX(1U, header.pixelDepth);
+    uint32_t slices = header.layerCount > 0 ? header.layerCount : 1;
+    ret.cubemap = (header.faceCount == 6);
+    if(ret.cubemap)
+      slices *= 6;
+    ret.slices = slices;
+    ret.mips = levelCount;
+
+    // 6) map vkFormat -> ResourceFormat (you can expand mapping as needed)
+    ret.format = VKFormat2ResourceFormat(header.vkFormat);
+    if(ret.format.type == ResourceFormatType::Undefined)
+    {
+      // if not known, mark unsupported for now
+      RETURN_ERROR_RESULT(ResultCode::ImageUnsupported, "Unsupported vkFormat %u", header.vkFormat);
+    }
+
+    // 7) read each level's data and append into ret.buffer, record subresources
+    size_t curOff = 0;
+    ret.buffer.clear();
+    ret.subresources.clear();
+    ret.subresources.reserve((size_t)ret.slices * ret.mips);
+
+    for(uint32_t slice = 0; slice < ret.slices; ++slice)
+    {
+      for(uint32_t mip = 0; mip < ret.mips; ++mip)
+      {
+        uint32_t levelIndex = mip;    // KTX2 level entries are per-level; array/cubemap splitting
+                                      // handled in indexing semantics
+        const LevelIndexEntry &li = levels[levelIndex];
+
+        if(li.length == 0)
+        {
+          // empty level: push zero-sized subresource
+          ret.subresources.push_back({curOff, 0});
+          continue;
+        }
+
+        // set mem reader to absolute offset then read
+        mem.SetOffset(li.offset);
+
+        size_t sz = (size_t)li.length;
+        size_t prevSize = ret.buffer.size();
+        ret.buffer.resize(prevSize + sz);
+
+        uint64_t curPos = reader->GetOffset();
+        fileSize = reader->GetSize();
+
+        RDCLOG("Trying to read %llu bytes at offset %llu (fileSize = %llu)", (unsigned long long)sz,
+               (unsigned long long)curPos, (unsigned long long)fileSize);
+
+        if(!mem.Read(ret.buffer.data() + prevSize, sz))
+          RETURN_ERROR_RESULT(ResultCode::FileIOFailed, "Failed to read level image data");
+
+        ret.subresources.push_back({prevSize, sz});
+        curOff = prevSize + sz;
+      }
+    }
+
+    // 8) done
+    RDCLOG("KTX2 loaded: %ux%u, mips=%u, slices=%u, format vk=%u -> %s", ret.width, ret.height,
+           ret.mips, ret.slices, header.vkFormat, ret.format.Name().c_str());
+
+    return ResultCode::Succeeded;
+
+  }
 
 }
