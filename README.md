@@ -41,9 +41,11 @@ Outcome:
 - Parse KTX2 files in both pipelines and successfully view files with BC1,2,3,4,5,7 compression
 
 VSCode Plugin
+
 TODO Harris/Christina:
 
 RenderDoc
+
 <img src="output_images/bc1.png" width="100"> <img src="output_images/bc2.png" width="100"> <img src="output_images/bc3_lava.png" width="100"> <img src="output_images/bc4.png" width="100"> <img src="output_images/bc5.png" width="100"> <img src="output_images/bc7.png" width="100"> 
 
 ### Milestone 2
@@ -57,9 +59,11 @@ Outcome:
 - Supercompression formats
 
 VSCode Plugin
+
 TODO Harris/Christina:
 
 RenderDoc
+
 <img src="output_images/etc1s.png" width="100"> <img src="output_images/uastc.png" width="100"> 
 
 ## Setup
