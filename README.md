@@ -8,10 +8,10 @@ _A project by Caroline Fernandes, Harris Kokkinakos, Christina Qiu, and Rachel L
 
 # Sections 
 - [Introduction](https://github.com/0cfernandes00/565_FinalProject/blob/main/README.md#introduction)
-- [Technical Overview](https://github.com/0cfernandes00/565_FinalProject/blob/main/README.md#introduction)
-- [Milestone Development](https://github.com/0cfernandes00/565_FinalProject/blob/main/README.md#introduction)
-- [Setup](https://github.com/0cfernandes00/565_FinalProject/blob/main/README.md#introduction)
-- [References](https://github.com/0cfernandes00/565_FinalProject/blob/main/README.md#introduction)
+- [Technical Overview](https://github.com/0cfernandes00/565_FinalProject/blob/main/README.md#technical-overview)
+- [Milestone Development](https://github.com/0cfernandes00/565_FinalProject/blob/main/README.md#milestone-development)
+- [Setup](https://github.com/0cfernandes00/565_FinalProject/blob/main/README.md#setup)
+- [References](https://github.com/0cfernandes00/565_FinalProject/blob/main/README.md#references)
 
 ## Introduction
 KTX2Viewer was created to provide an open-source open-source cross-platform SDR + HDR viewer that allows developers and artists to accurately visualize KTX2 textures. The project aims to extend RenderDoc and WebGPU/VSCode's gLTF plugin. Users will have access to information such as channels, alpha blending, mipmap visualization, and tonemapping to interact with.
@@ -64,7 +64,7 @@ TODO Harris/Christina:
 
 RenderDoc
 
-<img src="output_images/etc1s.png" width="100"> <img src="output_images/uastc.png" width="100"> 
+<img src="output_images/etc1s.png" width="100" etc1s > <img src="output_images/uastc.png" width="100" uastc> 
 
 ## Setup
 
