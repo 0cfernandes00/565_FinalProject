@@ -117,9 +117,9 @@ Additionally, we downloaded HDR files from polyhaven to test the capabilities of
 
 RenderDoc
 
-<img src="output_images/etc1s.png" width="100" etc1s > <img src="output_images/uastc.png" width="100" uastc> 
+<img src="output_images/etc1s.png" width="200" etc1s > <img src="output_images/uastc.png" width="200" uastc> 
 
-<img src="output_images/tonemapping.png" width="200">
+<img src="output_images/tonemapping.png" width="500">
 
 ## Setup
 
