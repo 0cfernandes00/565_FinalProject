@@ -21,8 +21,7 @@ Our motivation for this project came from Binomial co-founders Steph Hurlburt an
 ## Technical Overview
 
 **What is KTX2?**
-KTX2 is 
-TODO: Harris add details for what KTX2 is/relevance in gpu textures community
+KTX2 is a universal container format for GPU textures. When working with GPU textures, there are many different texture compression types that GPUs use based on the type of GPU. For example, desktop GPUs often rely on BC compression types whereas mobile GPUs may use ETC. There are various versions of these compression types as well based on the type of texture, required details, and file size restrictions. KTX2 is a wrapper for all of these, allowing for the use of a singular file type for any of these compression types. Game studios and other companies relying on rendering often pre-compress their textures so that less data has to be sent to the GPU via PCIE. KTX2 helps developers organize and upload these texture efficiently. 
 
 TODO: Rachel explain tonemapping HDR process
 
