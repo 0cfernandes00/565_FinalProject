@@ -95,8 +95,8 @@ For Milestone 2, our goal was to support HDR and add mobile GPU texture formats.
 
 Outcome:
 - Tonemapping modes 
-  - Reinhard
-  - ACES
+  - Reinhard (in progress)
+  - ACES (in progress)
   - Exposure 
 - HDR
   - BC6H
