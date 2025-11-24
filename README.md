@@ -41,6 +41,33 @@ KTX2 files may store texture data in one of two Basis Universal supercompressed 
 
 WebGPU does not accept ETC1S or UASTC bitstreams directly. Instead, the viewer detects these cases through the KTX2 header (e.g., vkFormat = 0) and DFD metadata, then routes them to the transcoder.
 
+### Transcoding Pipeline
+
+1. KTX2 File Parsing
+   * The viewer loads the file and parses all container structures, including the header, level index, DFD, key/value data, and supercompression global data. This ensures correct interpretation of byte offsets and alignment rules.
+   * We detect:
+     * Whether the KTX2 uses Basis Universal (ETC1S or UASTC)
+     * Whether the KTX2 contains already-compressed GPU-native data
+     * Whether the user’s GPU supports BC / ETC2 / ASTC via adapter.features
+
+2. Full-File Transcoding
+   * Transcoding happens in two cases:
+     * The texture is ETC1S or UASTC (Basis Universal), indicated by vkFormat == 0
+     * The texture is ETC2 but the GPU does not support texture-compression-etc2
+   * The viewer uses a unified transcoding path (transcodeFullKTX2) to decode all mip levels in one pass. This ensures:
+     * correct handling of global codebooks
+     * consistent block interpretation across mips
+     * correct decoding for both ETC1S and UASTC payloads
+
+3. Selection of GPU Format
+   * The viewer currently targets high-quality BC formats for maximum visual fidelity:
+     * ETC1S → BC7
+     * UASTC → BC7
+   * Native BC formats (BC1/BC3/BC4/BC5/BC7) bypass the transcoder and are uploaded directly.
+
+4. Block-Compressed Upload to WebGPU
+   * After transcoding, mip levels are padded to WebGPU’s 256-byte bytesPerRow alignment using a block-row–aware padding routine. The texture is then created and uploaded level-by-level using the native WebGPU API.
+
 ## Milestone Development
 
 ### Milestone 1
