@@ -42,7 +42,7 @@ Outcome:
 
 VSCode Plugin
 
-TODO Harris/Christina:
+<img src="output_images/vs_bc1.png" width="100"> <img src="output_images/vs_bc2.png" width="100"> <img src="output_images/vs_bc3_lava.png" width="100"> <img src="output_images/vs_bc4.png" width="100"> <img src="output_images/vs_bc5.png" width="100"> <img src="output_images/vs_bc7_2.png" width="100"> 
 
 RenderDoc
 
