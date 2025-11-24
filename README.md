@@ -115,6 +115,7 @@ Additionally, we downloaded HDR files from polyhaven to test the capabilities of
 
 <img width="767" height="409" alt="Screenshot 2025-11-24 145138" src="https://github.com/user-attachments/assets/e3a81a7d-072b-4729-84e3-ec2cb0a968c1" />
 
+
 RenderDoc
 
 <img src="output_images/etc1s.png" width="200" etc1s > <img src="output_images/uastc.png" width="200" uastc> 
