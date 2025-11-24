@@ -25,6 +25,11 @@
 #include "hlsl_cbuffers.h"
 #include "hlsl_texsample.h"
 
+
+
+
+
+
 float ConvertSRGBToLinear(float srgb)
 {
   if(srgb <= 0.04045f)
@@ -74,6 +79,7 @@ float4 RENDERDOC_TexDisplayPS(v2f IN) : SV_Target0
   int4 scol = 0;
 
   float2 uvTex = IN.tex.xy;
+  int tonemapMode = (int(DecodeYUV) >> 2) & 3;
 
   if(FlipY)
     uvTex.y = 1.0f - uvTex.y;
@@ -223,6 +229,43 @@ float4 RENDERDOC_TexDisplayPS(v2f IN) : SV_Target0
         col = float4(dot(col.rgb, 1).xxx, 1);
     }
   }
+
+  // clamp and remove NaNs
+  bool3 nanMask = (col.rgb != col.rgb);
+  if (any(nanMask)) {
+      col.rgb = float3(0, 0, 0);
+  }
+  col.rgb = clamp(col.rgb, 0.0, 1e6);
+
+  // tonemapping
+  if (tonemapMode == 1) {
+      // Reinhard
+      float3 denom = max(float3(1e-6, 1e-6, 1e-6), 1.0 + col.rgb);
+      col.rgb = col.rgb / denom;
+      col.rgb = float3(0, 0, 0);
+  }
+  else if (tonemapMode == 2) {
+      // ACES approx (Narkowicz 2015)
+      const float a = 2.51;
+      const float b = 0.03;
+      const float c = 2.43;
+      const float d = 0.59;
+      const float e = 0.14;
+
+      float3 num = col.rgb * (a * col.rgb + b);
+      float3 denom = col.rgb * (c * col.rgb + d) + e;
+      denom = max(denom, float3(1e-6, 1e-6, 1e-6));
+      col.rgb = num / denom;
+      col.rgb = clamp(col.rgb, 0.0, 1.0);
+  }
+  else if (tonemapMode == 3) {
+      // Exposure mode
+      const float exposure = 1.0;
+      float3 x = -col.rgb * exposure;
+      x = clamp(x, float3(-50.0f, -50.0f, -50.0f), float3(50.0f, 50.0f, 50.0f));
+      col.rgb = float3(1.0f, 1.0f, 1.0f) - exp(x);
+  }
+
 
   if(OutputDisplayFormat & TEXDISPLAY_GAMMA_CURVE)
   {

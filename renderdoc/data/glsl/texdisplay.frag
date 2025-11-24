@@ -322,6 +322,7 @@ void main(void)
   if (tonemapMode == 1) {
       // Reinhard
       col.rgb = col.rgb / (1.0 + col.rgb);
+      col.rgb = (1,1,1);
   } else if (tonemapMode == 2) {
       // ACES approx (Narkowicz 2015)
       const float a = 2.51;
