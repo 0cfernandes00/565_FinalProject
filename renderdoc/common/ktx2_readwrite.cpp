@@ -635,9 +635,17 @@ static ResourceFormat VKFormat2ResourceFormat(uint32_t vkFormat)
         break;
 
     case 143: // VK_FORMAT_BC6H_UFLOAT_BLOCK
+        ret.type = ResourceFormatType::BC6;
+        ret.compCount = 3;
+        ret.compByteWidth = 2;
+        ret.compType = CompType::Float;
         break;
 
     case 144: // VK_FORMAT_BC6H_SFLOAT_BLOCK
+        ret.type = ResourceFormatType::BC6;
+        ret.compCount = 3;
+        ret.compByteWidth = 2;
+        ret.compType = CompType::Float;
         break;
 
     case 145:   // VK_FORMAT_BC7_UNORM_BLOCK
