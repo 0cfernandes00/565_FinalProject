@@ -234,6 +234,7 @@ private slots:
   void channelsWidget_mouseClicked(QMouseEvent *event);
   void channelsWidget_toggled(bool checked) { UI_UpdateChannels(); }
   void channelsWidget_selected(int index) { UI_UpdateChannels(); }
+  void tonemapWidget_selected(int index) { UI_UpdateTonemapping(); }
 protected:
   void enterEvent(QEvent *event) override;
   void showEvent(QShowEvent *event) override;
@@ -253,6 +254,7 @@ private:
   void UI_SetHistogramRange(const TextureDescription *tex, CompType typeCast);
 
   void UI_UpdateChannels();
+  void UI_UpdateTonemapping();
 
   void HighlightUsage();
 

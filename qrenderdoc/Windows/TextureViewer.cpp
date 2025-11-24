@@ -505,8 +505,10 @@ TextureViewer::TextureViewer(ICaptureContext &ctx, QWidget *parent)
                    &TextureViewer::channelsWidget_toggled);
   QObject::connect(ui->channels, OverloadedSlot<int>::of(&QComboBox::currentIndexChanged), this,
                    &TextureViewer::channelsWidget_selected);
-  QObject::connect(ui->hdrMul, OverloadedSlot<int>::of(&QComboBox::currentIndexChanged), this,
+  QObject::connect(ui->tonemapMode, OverloadedSlot<int>::of(&QComboBox::currentIndexChanged), this,
                    &TextureViewer::channelsWidget_selected);
+  QObject::connect(ui->hdrMul, OverloadedSlot<int>::of(&QComboBox::currentIndexChanged), this,
+                   &TextureViewer::tonemapWidget_selected);
   QObject::connect(ui->hdrMul, &QComboBox::currentTextChanged, [this] { UI_UpdateChannels(); });
   QObject::connect(ui->customShader, OverloadedSlot<int>::of(&QComboBox::currentIndexChanged), this,
                    &TextureViewer::channelsWidget_selected);
@@ -1556,6 +1558,7 @@ void TextureViewer::UI_OnTextureSelectionChanged(bool newAction)
     {
       // if we are using per-tex settings, reset back to RGB
       ui->channels->setCurrentIndex(0);
+      ui->tonemapMode->setCurrentIndex(0);
 
       ui->customShader->setCurrentText(QString());
 
@@ -1870,6 +1873,10 @@ void TextureViewer::UI_UpdateChannels()
   INVOKE_MEMFN(RT_UpdateAndDisplay);
   INVOKE_MEMFN(RT_UpdateVisualRange);
   UI_UpdateStatusText();
+}
+
+void TextureViewer::UI_UpdateTonemapping() {
+    m_TexDisplay.tonemapMode = ui->tonemapMode->currentIndex();
 }
 
 void TextureViewer::SetupTextureTabs()
@@ -3012,6 +3019,7 @@ void TextureViewer::Reset()
   UI_SetScale(1.0f);
 
   ui->channels->setCurrentIndex(0);
+  ui->tonemapMode->setCurrentIndex(0);
   ui->overlay->setCurrentIndex(0);
 
   {
