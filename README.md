@@ -26,7 +26,20 @@ TODO: Harris add details for what KTX2 is/relevance in gpu textures community
 
 TODO: Rachel explain tonemapping HDR process
 
-TODO: Christina information about other formats/transcoding
+### Format Decoding/Encoding
+Our KTX2Viewer aims to support both native GPU block-compressed formats and Basis Universal formats by implementing a full KTX2 parsing and transcoding pipeline in WebGPU. The system uses two core components:
+
+* <b>basis_transcoder.js / basis_transcoder.wasm</b> — The Binomial Basis Universal transcoder, used for converting ETC1S and UASTC texture payloads into GPU-ready BC formats.
+
+* <b>libktx.js / libktx.wasm</b> — The canonical KTX2 parsing library from the Khronos Group, used to read container metadata, global codebooks, Data Format Descriptors (DFDs), and mip level tables.
+
+KTX2 files may store texture data in one of two Basis Universal supercompressed formats:
+
+* <b>ETC1S</b> — A highly compressed, entropy-coded format using global codebooks stored in the KTX2 supercompression data block.
+
+* <b>UASTC</b> — A high-quality format similar to BC7 blocks, but still requiring transcoding for WebGPU consumption.
+
+WebGPU does not accept ETC1S or UASTC bitstreams directly. Instead, the viewer detects these cases through the KTX2 header (e.g., vkFormat = 0) and DFD metadata, then routes them to the transcoder.
 
 ## Milestone Development
 
