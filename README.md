@@ -73,7 +73,17 @@ Outcome:
 
 VSCode Plugin
 
-TODO Harris/Christina:
+During this milestone, HDR was integrated into the VSCode plugin. This was enabled by the use of VK_FORMATs 143 and 144, the formats for BC6H signed and unsigned rendering. Additionally, a slider was added to change exposer based on the ACES tonemapping. This enables the high range of color values to be properly displayed to the screen using the equation below where x represents the input hdr color.
+
+<img width="819" height="222" alt="Screenshot 2025-11-24 144132" src="https://github.com/user-attachments/assets/b309a536-dc6d-4a85-94fa-6b9ef62e24d3" />
+
+A common issue with rendering HDR is the fidelity of colors. Many renderers struggle with color banding, an artifact produced by downsampling colors, causing noticable differences in colors rather than smooth gradients. The image on the left showcasees the VSCode extention's rendering of a gradient fromm white to black smoothly. The image on the right shows what it would look like if it were incorrectly rendering HDR with noticable color banding.
+
+<img width="748" height="325" alt="Screenshot 2025-11-24 141826" src="https://github.com/user-attachments/assets/d58c82bc-2fe9-4634-8fe6-ba0a6514f0ac" />
+
+Additionally, we downloaded HDR files from polyhaven to test the capabilities of our previewer. Below shows images from the previewer on an HDR file compressed using unsigned BC6H and exported as a ktx2 file at varying exposure levels, showcasing the previewer's ability to maintain color fideelity within bright white shades and dark black shades.
+
+<img width="767" height="409" alt="Screenshot 2025-11-24 145138" src="https://github.com/user-attachments/assets/e3a81a7d-072b-4729-84e3-ec2cb0a968c1" />
 
 RenderDoc
 
