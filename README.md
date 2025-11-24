@@ -95,7 +95,11 @@ For Milestone 2, our goal was to support HDR and add mobile GPU texture formats.
 
 Outcome:
 - Tonemapping
+  - Reinhard
+  - ACES
+  - xposure modes
 - HDR
+  - BC6H
 - Supercompression formats
 
 VSCode Plugin
