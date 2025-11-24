@@ -119,6 +119,8 @@ RenderDoc
 
 <img src="output_images/etc1s.png" width="100" etc1s > <img src="output_images/uastc.png" width="100" uastc> 
 
+<img src="output_images/tonemapping.png" width="200">
+
 ## Setup
 
 ### VSCode
