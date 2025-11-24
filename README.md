@@ -94,10 +94,10 @@ RenderDoc
 For Milestone 2, our goal was to support HDR and add mobile GPU texture formats.
 
 Outcome:
-- Tonemapping
+- Tonemapping modes 
   - Reinhard
   - ACES
-  - xposure modes
+  - Exposure 
 - HDR
   - BC6H
 - Supercompression formats
