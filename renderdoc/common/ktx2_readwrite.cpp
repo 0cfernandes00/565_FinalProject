@@ -10,6 +10,9 @@
 #include <iostream>
 
 #include "basisu/basisu_transcoder.h"
+#include "libktx/Etc.h"
+#include "libktx/EtcImage.h"
+#include "libktx/EtcBlock4x4.h"
 
 #define KTX2_SUPERCOMPRESSION_UASTC 1
 #define KTX2_SUPERCOMPRESSION_ETC1S 2
@@ -654,11 +657,33 @@ static ResourceFormat VKFormat2ResourceFormat(uint32_t vkFormat)
       ret.compType = CompType::UNormSRGB;
       break;
 
-    case 152: 
-      ret.type = ResourceFormatType::ETC2; 
+    case 147:    // VK_FORMAT_ETC2_R8G8B8_UNORM_BLOCK
+      ret.type = ResourceFormatType::ETC2;
+      ret.compCount = 3;
+      ret.compByteWidth = 1;
+      ret.compType = CompType::UNorm;
+      break;
+
+    case 148:    // VK_FORMAT_ETC2_R8G8B8_SRGB_BLOCK
+      ret.type = ResourceFormatType::ETC2;
+      ret.compCount = 3;
+      ret.compByteWidth = 1;
+      ret.compType = CompType::UNormSRGB;
+      break;
+
+    case 151:    // VK_FORMAT_ETC2_R8G8B8A8_UNORM_BLOCK
+      ret.type = ResourceFormatType::ETC2;
+      ret.compCount = 4;
+      ret.compByteWidth = 1;
+      ret.compType = CompType::UNorm;
+      break;
+
+    case 152:    // VK_FORMAT_ETC2_R8G8B8A8_SRGB_BLOCK (your case)
+      ret.type = ResourceFormatType::ETC2;
       ret.compCount = 4;
       ret.compByteWidth = 1;
       ret.compType = CompType::UNormSRGB;
+      break;
 
     case 159:    // VK_FORMAT_ASTC_5x4_UNORM_BLOCK
       ret.type = ResourceFormatType::ASTC;
@@ -685,6 +710,281 @@ struct KTX2_ETC1S_GlobalData
   uint8_t endpoints;
   uint8_t selectors;
 };
+
+
+// Manual ETC2 decoder - no external dependencies
+// Based on the Khronos ETC2 specification
+
+// ETC2 decoder — corrected implementation
+#include <algorithm>
+#include <cstdint>
+#include <cstring>
+
+// Define formats used by the decoder
+enum class ETC2Format
+{
+  RGB8,
+  RGBA8,
+  SRGB8,
+  SRGBA8
+};
+
+namespace ETC2Decoder
+{
+// Helper: clamp to 0..255
+static inline uint8_t Clamp255(int v)
+{
+  if(v < 0)
+    return 0;
+  if(v > 255)
+    return 255;
+  return (uint8_t)v;
+}
+
+// Extend n-bit value to 8-bit by replication
+static inline int ExpandBits(int val, int bits)
+{
+  if(bits == 4)
+    return (val << 4) | val;
+  if(bits == 5)
+    return (val << 3) | (val >> 2);
+  if(bits == 3)
+    return (val << 5) | (val << 2) | (val >> 1);
+  int shift = 8 - bits;
+  return (val << shift) | (val >> (bits - shift));
+}
+
+static const int SELECTOR_LUT[16] = {0, 4, 8, 12, 1, 5, 9, 13, 2, 6, 10, 14, 3, 7, 11, 15};
+//  ALT LUT (row-major mapping) - try if LUT permutation is the culprit
+//static const int SELECTOR_LUT[16] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
+
+
+static const int ETC_MODIFIERS[8][4] = {
+    {2, 8, -2, -8},     {5, 17, -5, -17},   {9, 29, -9, -29},     {13, 42, -13, -42},
+    {18, 60, -18, -60}, {24, 80, -24, -80}, {33, 106, -33, -106}, {47, 183, -47, -183}};
+
+static const int EAC_ALPHA_MOD[16] = {-3, -6, -9, -15, 2, 5, 8, 14, -3, -6, -9, -15, 2, 5, 8, 14};
+
+void DecodeETC2Block_RGB(const uint8_t *block, uint8_t *outRGBA, int width, int height, int blockX,
+                         int blockY, int imageRowPitch)
+{
+  if(!block || !outRGBA)
+    return;
+  
+  const uint32_t selectors = (uint32_t(block[4]) << 24) | (uint32_t(block[5]) << 16) |
+                             (uint32_t(block[6]) << 8) | (uint32_t(block[7]) << 0);
+  
+  /*
+  const uint32_t selectors = (uint32_t(block[6]) << 24) | (uint32_t(block[7]) << 16) |
+                                  (uint32_t(block[4]) << 8) | (uint32_t(block[5]) << 0);
+  */
+  /*
+  const uint32_t selectors = (uint32_t(block[7]) << 24) | (uint32_t(block[6]) << 16) |
+                                  (uint32_t(block[5]) << 8) | (uint32_t(block[4]) << 0);
+  */
+  const bool diffBit = (block[3] & 0x02) != 0;
+  const bool flipBit = (block[3] & 0x01) != 0;
+
+  int r1, g1, b1, r2, g2, b2;
+
+  if(diffBit)
+  {
+    int r_base5 = block[0] >> 3;
+    int g_base5 = block[1] >> 3;
+    int b_base5 = block[2] >> 3;
+
+    int r_diff3 = block[0] & 0x7;
+    if(r_diff3 & 0x4)
+      r_diff3 |= ~0x7;
+    int g_diff3 = block[1] & 0x7;
+    if(g_diff3 & 0x4)
+      g_diff3 |= ~0x7;
+    int b_diff3 = block[2] & 0x7;
+    if(b_diff3 & 0x4)
+      b_diff3 |= ~0x7;
+
+    int r_base5_2 = r_base5 + r_diff3;
+    int g_base5_2 = g_base5 + g_diff3;
+    int b_base5_2 = b_base5 + b_diff3;
+
+    bool diffOverflow = (r_base5_2 < 0 || r_base5_2 > 31 || g_base5_2 < 0 || g_base5_2 > 31 ||
+                         b_base5_2 < 0 || b_base5_2 > 31);
+
+    if(diffOverflow)
+    {
+      r1 = ExpandBits((block[0] & 0xF0) >> 4, 4);
+      g1 = ExpandBits((block[1] & 0xF0) >> 4, 4);
+      b1 = ExpandBits((block[2] & 0xF0) >> 4, 4);
+      r2 = ExpandBits(block[0] & 0x0F, 4);
+      g2 = ExpandBits(block[1] & 0x0F, 4);
+      b2 = ExpandBits(block[2] & 0x0F, 4);
+    }
+    else
+    {
+      r1 = ExpandBits(r_base5, 5);
+      g1 = ExpandBits(g_base5, 5);
+      b1 = ExpandBits(b_base5, 5);
+      r2 = ExpandBits(r_base5_2, 5);
+      g2 = ExpandBits(g_base5_2, 5);
+      b2 = ExpandBits(b_base5_2, 5);
+    }
+  }
+  else
+  {
+    r1 = ExpandBits((block[0] & 0xF0) >> 4, 4);
+    g1 = ExpandBits((block[1] & 0xF0) >> 4, 4);
+    b1 = ExpandBits((block[2] & 0xF0) >> 4, 4);
+    r2 = ExpandBits(block[0] & 0x0F, 4);
+    g2 = ExpandBits(block[1] & 0x0F, 4);
+    b2 = ExpandBits(block[2] & 0x0F, 4);
+  }
+
+  const int table1 = (block[3] >> 5) & 0x7;
+  const int table2 = (block[3] >> 2) & 0x7;
+
+  for(int py = 0; py < 4; ++py)
+  {
+    for(int px = 0; px < 4; ++px)
+    {
+      int pixelIndex = py * 4 + px;
+      int s = SELECTOR_LUT[pixelIndex];
+      int lsb = (selectors >> s) & 1;
+      int msb = (selectors >> (s + 16)) & 1;
+      int modIndex = (msb << 1) | lsb;
+
+      bool useSubblock1;
+
+      if(flipBit == 0)
+      {
+        // Horizontal split → top 2 rows = subblock0, bottom 2 rows = subblock1
+        useSubblock1 = (py >= 2);
+      }
+      else
+      {
+        // Vertical split → left 2 columns = subblock0, right 2 columns = subblock1
+        useSubblock1 = (px >= 2);
+      }
+
+      int r, g, b;
+      if(useSubblock1)
+      {
+        r = r2 + ETC_MODIFIERS[table2][modIndex];
+        g = g2 + ETC_MODIFIERS[table2][modIndex];
+        b = b2 + ETC_MODIFIERS[table2][modIndex];
+      }
+      else
+      {
+        r = r1 + ETC_MODIFIERS[table1][modIndex];
+        g = g1 + ETC_MODIFIERS[table1][modIndex];
+        b = b1 + ETC_MODIFIERS[table1][modIndex];
+      }
+
+      int gx = blockX * 4 + px;
+      int gy = blockY * 4 + py;
+      if(gx < width && gy < height)
+      {
+        size_t outIdx = (size_t)gy * (size_t)imageRowPitch + (size_t)gx;
+        uint8_t *dst = outRGBA + (outIdx * 4);
+        dst[0] = Clamp255(r);
+        dst[1] = Clamp255(g);
+        dst[2] = Clamp255(b);
+        dst[3] = 255;
+      }
+    }
+  }
+}
+
+void DecodeETC2Block_RGBA(const uint8_t *block16, uint8_t *outRGBA, int width, int height,
+                          int blockX, int blockY, int imageRowPitch)
+{
+  if(!block16 || !outRGBA)
+    return;
+  DecodeETC2Block_RGB(block16 + 8, outRGBA, width, height, blockX, blockY, imageRowPitch);
+
+  const uint8_t *a = block16;
+  const int baseAlpha = (int)a[0];
+  const int multiplier = (int)a[1];
+  uint64_t alphaBits = 0;
+  for(int i = 2; i < 8; ++i)
+    alphaBits = (alphaBits << 8) | uint64_t(a[i]);
+
+  for(int py = 0; py < 4; ++py)
+  {
+    for(int px = 0; px < 4; ++px)
+    {
+      int pixelIndex = py * 4 + px;
+      int s = SELECTOR_LUT[pixelIndex];
+      int shift = 45 - (s * 3);
+      int idx = int((alphaBits >> shift) & 0x7);
+      int alpha = baseAlpha + multiplier * EAC_ALPHA_MOD[idx];
+
+      int gx = blockX * 4 + px;
+      int gy = blockY * 4 + py;
+      if(gx < width && gy < height)
+      {
+        size_t outIdx = (size_t)gy * (size_t)imageRowPitch + (size_t)gx;
+        outRGBA[outIdx * 4 + 3] = Clamp255(alpha);
+      }
+    }
+  }
+}
+}
+
+// Main decode function
+void DecodeEtc2ToRGBA8(const uint8_t *etcData, size_t dataSize, int width, int height,
+                       ETC2Format format, uint8_t *outBuffer)
+{
+  if(!etcData || !outBuffer || width <= 0 || height <= 0)
+    return;
+
+  bool hasAlpha = (format == ETC2Format::RGBA8 || format == ETC2Format::SRGBA8);
+
+  const int blocksX = (width + 3) / 4;
+  const int blocksY = (height + 3) / 4;
+  const int bytesPerBlock = hasAlpha ? 16 : 8;
+  const uint64_t expected = uint64_t(blocksX) * uint64_t(blocksY) * uint64_t(bytesPerBlock);
+
+  // Safety Check
+  if(dataSize < expected)
+  {
+    RDCLOG("Error: ETC2 buffer too small. Expected %llu, got %llu", expected, (uint64_t)dataSize);
+    // Fill magenta error placeholder
+    for(int i = 0; i < width * height; ++i)
+    {
+      outBuffer[i * 4 + 0] = 255;
+      outBuffer[i * 4 + 1] = 0;
+      outBuffer[i * 4 + 2] = 255;
+      outBuffer[i * 4 + 3] = 255;
+    }
+    return;
+  }
+
+  // Initialize alpha to opaque
+  for(int i = 0; i < width * height; ++i)
+    outBuffer[i * 4 + 3] = 255;
+
+  const uint8_t *p = etcData;
+  const uint8_t *end = etcData + dataSize;
+
+  for(int by = 0; by < blocksY; ++by)
+  {
+    for(int bx = 0; bx < blocksX; ++bx)
+    {
+      if(p + bytesPerBlock > end)
+        return;    // Bounds safety
+
+      if(hasAlpha)
+      {
+        ETC2Decoder::DecodeETC2Block_RGBA(p, outBuffer, width, height, bx, by, width);
+      }
+      else
+      {
+        ETC2Decoder::DecodeETC2Block_RGB(p, outBuffer, width, height, bx, by, width);
+      }
+      p += bytesPerBlock;
+    }
+  }
+}
 
 
 RDResult load_ktx2_from_file(StreamReader *reader, read_tex_data &ret)
@@ -722,7 +1022,16 @@ RDResult load_ktx2_from_file(StreamReader *reader, read_tex_data &ret)
 
   // 2) Use ktx2_transcoder to parse the KTX2 (this fills header, level index, DFD, etc)
   basist::ktx2_transcoder kt2;
-  if(kt2.init(filebuf.data(), (uint32_t)filebuf.size()))
+  bool kt2InitSuccess = kt2.init(filebuf.data(), (uint32_t)filebuf.size());
+
+  // Check if ETC2 format
+  const basist::ktx2_header &hdr = kt2.get_header();
+  ret.format = VKFormat2ResourceFormat(hdr.m_vk_format);
+
+  const bool isETC2 = (hdr.m_vk_format >= VK_FORMAT_ETC2_R8G8B8_UNORM_BLOCK &&
+                       hdr.m_vk_format <= VK_FORMAT_EAC_R11G11_SNORM_BLOCK);
+
+  if(kt2InitSuccess || isETC2)
   {
     // read basic metadata from transcoder
     const uint32_t width = kt2.get_width();
@@ -745,6 +1054,108 @@ RDResult load_ktx2_from_file(StreamReader *reader, read_tex_data &ret)
     ret.slices = slices;
     ret.cubemap = (faceCount == 6);
     ret.mips = levelCount;
+
+    if(isETC2)
+    {
+      // KTX2 Spec: vkFormat is at offset 12
+      uint32_t vkFormat = *reinterpret_cast<uint32_t *>(filebuf.data() + 12);
+
+      RDCLOG("Decoding ETC2 format %u to RGBA8", vkFormat);
+
+      // FIX: Level Index starts at 80 (48 header + 32 DFD offsets)
+      // Your previous crash was caused by reading from offset 48
+      const uint8_t *levelIndexStart = filebuf.data() + 80;
+
+      ret.buffer.clear();
+      ret.subresources.clear();
+      ret.buffer.reserve((size_t)width * (size_t)height * 4 * ret.mips * ret.slices);
+
+      for(uint32_t slice = 0; slice < ret.slices; ++slice)
+      {
+        for(uint32_t mip = 0; mip < ret.mips; ++mip)
+        {
+          // Entry format: byteOffset (8), byteLength (8), uncompressedByteLength (8)
+          size_t entrySize = 24;
+          size_t entryOffset = mip * entrySize;
+          const uint8_t *entryPtr = levelIndexStart + entryOffset;
+
+          // Bounds check the index read
+          if(entryPtr + entrySize > filebuf.data() + filebuf.size())
+            RETURN_ERROR_RESULT(ResultCode::FileIOFailed, "KTX2 Level Index out of bounds");
+
+          uint64_t offset = *reinterpret_cast<const uint64_t *>(entryPtr);
+          uint64_t length = *reinterpret_cast<const uint64_t *>(entryPtr + 8);
+
+          // Bounds check the data read
+          if(offset + length > filebuf.size())
+            RETURN_ERROR_RESULT(ResultCode::FileIOFailed, "KTX2 Level Data out of bounds");
+
+          uint32_t mipW = RDCMAX(1U, width >> mip);
+          uint32_t mipH = RDCMAX(1U, height >> mip);
+
+          uint32_t pixels = mipW * mipH;
+          size_t decodedBytes = (size_t)pixels * 4;    // RGBA8
+
+          size_t prev = ret.buffer.size();
+          ret.buffer.resize(prev + decodedBytes);
+
+          uint64_t compressedBytesPerSlice = length / ret.slices;
+
+          RDCLOG("level %u: offset=%llu length=%llu slices=%u perSlice=%llu", mip,
+                 (unsigned long long)offset, (unsigned long long)length, ret.slices,
+                 (unsigned long long)(length / (ret.slices ? ret.slices : 1)));
+
+          if(ret.slices > 1 && length % ret.slices != 0)
+          {
+            RDCLOG("Warning: level length not divisible by slices — fallback will be used.");
+          }
+
+
+          const uint8_t *srcEtcData = filebuf.data() + offset + (slice * compressedBytesPerSlice);
+          uint8_t *destPtr = ret.buffer.data() + prev;
+
+          // Select Format
+          ETC2Format etcFormat;
+          switch(vkFormat)
+          {
+            case 147: etcFormat = ETC2Format::RGB8; break;
+            case 148: etcFormat = ETC2Format::SRGB8; break;
+            case 151: etcFormat = ETC2Format::RGBA8; break;
+            case 152: etcFormat = ETC2Format::SRGBA8; break;
+
+            // CRITICAL FIX: Map RGB8A1 (Punchthrough) to RGB8 (8 bytes/block)
+            // Treating this as RGBA8 (16 bytes) causes buffer overruns.
+            case 149: etcFormat = ETC2Format::RGB8; break;    // Loss of alpha, but prevents crash
+            case 150: etcFormat = ETC2Format::RGB8; break;    // Loss of alpha, but prevents crash
+
+            default:
+              RETURN_ERROR_RESULT(ResultCode::ImageUnsupported, "Unsupported ETC2 variant %u",
+                                  vkFormat);
+          }
+
+
+          // Call the updated manual decoder
+          DecodeEtc2ToRGBA8(srcEtcData, (size_t)compressedBytesPerSlice, mipW, mipH, etcFormat,
+                            destPtr);
+
+          ret.subresources.push_back({prev, decodedBytes});
+        }
+      }
+
+      // Set output Resource Format
+      ResourceFormat rgba8;
+      RDCEraseEl(rgba8);
+      rgba8.type = ResourceFormatType::Regular;
+      rgba8.compCount = 4;
+      rgba8.compByteWidth = 1;
+      bool isSRGB = (vkFormat == 148 || vkFormat == 152 || vkFormat == 150);
+      rgba8.compType = isSRGB ? CompType::UNormSRGB : CompType::UNorm;
+      ret.format = rgba8;
+
+      RDCLOG("ETC2 decoded to RGBA8: %ux%u, mips=%u, slices=%u", ret.width, ret.height, ret.mips,
+             ret.slices);
+      return ResultCode::Succeeded;
+    }
 
     // If the file is basis-compressed (ETC1S or UASTC) -> use kt2 transcode API
     const bool isBasis = kt2.is_etc1s() || kt2.is_uastc();
@@ -823,6 +1234,7 @@ RDResult load_ktx2_from_file(StreamReader *reader, read_tex_data &ret)
              ret.slices);
       return ResultCode::Succeeded;
     }
+
 
     // Not Basis-compressed: treat as raw/passthrough KTX2 levels.
     // Use the level index from the transcoder (packed_uint handled via get_uint64()/get()).
@@ -932,8 +1344,11 @@ RDResult load_ktx2_from_file(StreamReader *reader, read_tex_data &ret)
     }
 
     // Map vk format found in the parsed header to a ResourceFormat; prefer kt2.get_header().m_vk_format
-    const basist::ktx2_header &hdr = kt2.get_header();
-    ret.format = VKFormat2ResourceFormat(hdr.m_vk_format);
+
+    //const basist::ktx2_header &hdr = kt2.get_header();
+    //ret.format = VKFormat2ResourceFormat(hdr.m_vk_format);
+
+
     if(ret.format.type == ResourceFormatType::Undefined)
     {
       // If unknown VK format, still succeed if we have raw bytes. But prefer to indicate unsupported.
