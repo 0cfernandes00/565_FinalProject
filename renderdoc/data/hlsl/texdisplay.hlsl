@@ -79,6 +79,7 @@ float4 RENDERDOC_TexDisplayPS(v2f IN) : SV_Target0
   int4 scol = 0;
 
   float2 uvTex = IN.tex.xy;
+
   int tonemapMode = (int(DecodeYUV) >> 2) & 3;
 
   if(FlipY)
