@@ -120,6 +120,14 @@ RenderDoc
 
 <img src="output_images/tonemapping.png" width="500">
 
+
+### Milestone 3
+[Milestone 3 PPT](https://docs.google.com/presentation/d/1SyLAogpgcqYIloEKJvgi5zclnlhsPBSzcjfTvNP7VVw/edit?usp=sharing)
+
+For Milestone 3, our goal was to add UI and other features to expand functionality.
+
+Outcome:
+
 ## Setup
 
 ### VSCode
