@@ -49,8 +49,8 @@ IO_LOCATION(0) out vec4 color_out;
 
 
 // bit unpack DecodeYUV into decodeYUV and tonemapMode
-int decodeYUV = (texdisplay.DecodeYUV & 1);
-int tonemapMode = (texdisplay.DecodeYUV >> 2) & 3;
+int decodeYUV = (asuint(texdisplay.DecodeYUV) & 1);
+int tonemapMode = (asuint(texdisplay.DecodeYUV) >> 2) & 3;
 
 
 float ConvertSRGBToLinear(float srgb)

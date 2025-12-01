@@ -506,8 +506,6 @@ TextureViewer::TextureViewer(ICaptureContext &ctx, QWidget *parent)
   QObject::connect(ui->channels, OverloadedSlot<int>::of(&QComboBox::currentIndexChanged), this,
                    &TextureViewer::channelsWidget_selected);
   QObject::connect(ui->tonemapMode, OverloadedSlot<int>::of(&QComboBox::currentIndexChanged), this,
-                   &TextureViewer::channelsWidget_selected);
-  QObject::connect(ui->hdrMul, OverloadedSlot<int>::of(&QComboBox::currentIndexChanged), this,
                    &TextureViewer::tonemapWidget_selected);
   QObject::connect(ui->hdrMul, &QComboBox::currentTextChanged, [this] { UI_UpdateChannels(); });
   QObject::connect(ui->customShader, OverloadedSlot<int>::of(&QComboBox::currentIndexChanged), this,
@@ -783,12 +781,12 @@ void TextureViewer::RT_FetchCurrentPixel(IReplayController *r, uint32_t x, uint3
     }
   }
 
-  realValue = r->PickPixel(id, x, y, sub, typeCast);
+  realValue = r->PickPixel(id, x, y, sub, typeCast, m_TexDisplay.tonemapMode);
 
   if(m_TexDisplay.customShaderId != ResourceId())
   {
     pickValue = r->PickPixel(m_Output->GetCustomShaderTexID(), x, y,
-                             {m_TexDisplay.subresource.mip, 0, 0}, CompType::Typeless);
+                             {m_TexDisplay.subresource.mip, 0, 0}, CompType::Typeless, m_TexDisplay.tonemapMode);
   }
   else
   {
@@ -1688,7 +1686,6 @@ void TextureViewer::UI_UpdateChannels()
   }
 
   ui->channels->setItemText(0, yuv ? lit("YUVA") : lit("RGBA"));
-  ui->tonemapMode->setItemText(0, lit("None"));
   ui->channelRed->setText(lit("R"));
   ui->channelGreen->setText(lit("G"));
   ui->channelBlue->setText(lit("B"));
@@ -1877,6 +1874,10 @@ void TextureViewer::UI_UpdateChannels()
 
 void TextureViewer::UI_UpdateTonemapping() {
     m_TexDisplay.tonemapMode = ui->tonemapMode->currentIndex();
+
+    INVOKE_MEMFN(RT_UpdateAndDisplay);
+    INVOKE_MEMFN(RT_UpdateVisualRange);
+    UI_UpdateStatusText();
 }
 
 void TextureViewer::SetupTextureTabs()

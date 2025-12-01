@@ -80,7 +80,7 @@ float4 RENDERDOC_TexDisplayPS(v2f IN) : SV_Target0
 
   float2 uvTex = IN.tex.xy;
 
-  int tonemapMode = (int(DecodeYUV) >> 2) & 3;
+  int tonemapMode = (asuint(DecodeYUV) >> 2) & 3;
 
   if(FlipY)
     uvTex.y = 1.0f - uvTex.y;
@@ -243,7 +243,6 @@ float4 RENDERDOC_TexDisplayPS(v2f IN) : SV_Target0
       // Reinhard
       float3 denom = max(float3(1e-6, 1e-6, 1e-6), 1.0 + col.rgb);
       col.rgb = col.rgb / denom;
-      col.rgb = float3(0, 0, 0);
   }
   else if (tonemapMode == 2) {
       // ACES approx (Narkowicz 2015)
