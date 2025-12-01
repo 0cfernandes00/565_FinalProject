@@ -136,6 +136,16 @@ Outcome:
   - Reinhard
   - ACES
   - Exposure/Clamp
+ 
+#### Web App and UI Overhaul
+The VSCode plugin was adapted to also be used for a Web App version of the KTX2 viewer. Additioanlly, the UI was completely overhauled to have more information displayed to the user about the file they have loaded as well as more control over the preview. Mip and color channel viewing were added as well as texture info and log panels. 
+
+<img width="2555" height="1347" alt="Screenshot 2025-12-01 120043" src="https://github.com/user-attachments/assets/b64347eb-895b-4d34-8f96-deff5bfe52e7" />
+<img width="447" height="223" alt="Screenshot 2025-12-01 120024" src="https://github.com/user-attachments/assets/e866ac5e-8d84-46d2-b7a9-a396760f8137" />
+<img width="441" height="280" alt="Screenshot 2025-12-01 120120" src="https://github.com/user-attachments/assets/8c55da89-7012-45fc-af54-2e768b9fad4d" />
+<img width="422" height="549" alt="Screenshot 2025-12-01 120109" src="https://github.com/user-attachments/assets/d11b59e0-bf81-4c31-942a-894edab1216c" />
+<img width="450" height="355" alt="Screenshot 2025-12-01 120055" src="https://github.com/user-attachments/assets/e4938634-35bd-461a-bd9f-4919c3932a5b" />
+
 
 #### Tonemapping
 
