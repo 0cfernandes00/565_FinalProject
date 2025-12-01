@@ -139,19 +139,24 @@ Outcome:
 
 #### Tonemapping
 
-UI
+UI:
+
 <img src="output_images/tonemappingUI.png" width="250">
 
-None
+None:
+
 <img src="output_images/tonemappingNone.png" width="400">
 
-Reinhard
+Reinhard:
+
 <img src="output_images/tonemappingReinhard.png" width="400">
 
-ACES
+ACES:
+
 <img src="output_images/tonemappingACES.png" width="400">
 
-Clamp
+Clamp:
+
 <img src="output_images/tonemappingClamp.png" width="400">
 
 ## Setup
