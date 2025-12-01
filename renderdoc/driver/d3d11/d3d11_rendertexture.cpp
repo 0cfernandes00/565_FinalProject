@@ -838,7 +838,7 @@ bool D3D11Replay::RenderTextureInternal(TextureDisplay cfg, TexDisplayFlags flag
     pixelData.OutputDisplayFormat |= TEXDISPLAY_GAMMA_CURVE;
   }
 
-  RDCLOG("DecodeYUV = %d, tonemapMode bits = %d", pixelData.DecodeYUV, (pixelData.DecodeYUV >> 2) & 3);
+  //RDCLOG("DecodeYUV = %d, tonemapMode bits = %d", pixelData.DecodeYUV, (pixelData.DecodeYUV >> 2) & 3);
 
   ID3D11Buffer *vsCBuffer = GetDebugManager()->MakeCBuffer(&vertexData, sizeof(vertexData));
   ID3D11Buffer *psCBuffer = GetDebugManager()->MakeCBuffer(&pixelData, sizeof(pixelData));
