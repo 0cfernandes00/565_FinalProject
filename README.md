@@ -132,20 +132,18 @@ Outcome:
   - blending functions
 - gltf validate
 - Tonemapping mode UI
-  
-    <img src="output_images/tonemappingUI.png" width="250">
-  - None
-
-    <img src="output_images/tonemappingNone.png" width="400">
+  - None    
   - Reinhard
-  
-    <img src="output_images/tonemappingReinhard.png" width="400">
   - ACES
-  
-    <img src="output_images/tonemappingACES.png" width="400">
   - Exposure/Clamp
-  
-    <img src="output_images/tonemappingClamp.png" width="400">
+
+# Tonemapping
+
+<img src="output_images/tonemappingUI.png" width="250">
+<img src="output_images/tonemappingNone.png" width="400">
+<img src="output_images/tonemappingReinhard.png" width="400">
+<img src="output_images/tonemappingACES.png" width="400">
+<img src="output_images/tonemappingClamp.png" width="400">
 
 ## Setup
 
