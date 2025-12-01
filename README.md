@@ -127,6 +127,10 @@ RenderDoc
 For Milestone 3, our goal was to add UI and other features to expand functionality.
 
 Outcome:
+- User Interaction
+  - alpha channels
+  - blending functions
+- gltf validate
 
 ## Setup
 
