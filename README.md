@@ -137,12 +137,21 @@ Outcome:
   - ACES
   - Exposure/Clamp
 
-# Tonemapping
+#### Tonemapping
 
+UI
 <img src="output_images/tonemappingUI.png" width="250">
+
+None
 <img src="output_images/tonemappingNone.png" width="400">
+
+Reinhard
 <img src="output_images/tonemappingReinhard.png" width="400">
+
+ACES
 <img src="output_images/tonemappingACES.png" width="400">
+
+Clamp
 <img src="output_images/tonemappingClamp.png" width="400">
 
 ## Setup
