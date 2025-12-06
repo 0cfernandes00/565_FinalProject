@@ -621,8 +621,16 @@ If set to (0, 0, 0, 0) the global checkerboard colors are used.
 )");
   int tonemapMode;
 
+  DOCUMENT(R"(The exposure to use for HDR tonemapping.
+
+:type: float
+)");
+  float tonemapExposure;
+
   static const uint32_t ResolveSamples = ~0U;
 };
+  
+
 
 DECLARE_REFLECTION_STRUCT(TextureDisplay);
 

@@ -107,7 +107,7 @@ BINDING(0) uniform TexDisplayUBOData
   float Slice;
 
   int SampleIdx;
-  int DecodeYUV; // upper 2 bits is for ToneMappingMode
+  int DecodeYUV; // bit 0 - decodeYUV, bits 1-3 - tonemapMode, bits 4-31 - tonemapExposure
   vec2 MipShift;
 
   uvec4 YUVDownsampleRate;

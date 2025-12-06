@@ -80,7 +80,11 @@ float4 RENDERDOC_TexDisplayPS(v2f IN) : SV_Target0
 
   float2 uvTex = IN.tex.xy;
 
-  int tonemapMode = (asuint(DecodeYUV) >> 2) & 3;
+  // bit unpack DecodeYUV into decodeYUV and tonemapMode; bit 0 for decodeYUV, bits 1-3 for tonemapMode, bits 4-31 for exposure
+  bool decodeYUV = (asuint(DecodeYUV) & 0x1) != 0;
+  int tonemapMode = (asuint(DecodeYUV) >> 1) & 0x7;
+  uint packedExposure = asuint(DecodeYUV) >> 4;
+  float exposure = float(packedExposure) / float(0x0FFFFFFF) * 8.0f - 4.0f;
 
   if(FlipY)
     uvTex.y = 1.0f - uvTex.y;
@@ -245,7 +249,7 @@ float4 RENDERDOC_TexDisplayPS(v2f IN) : SV_Target0
       col.rgb = col.rgb / denom;
   }
   else if (tonemapMode == 2) {
-      // ACES approx (Narkowicz 2015)
+      // Hable (ACES approx; Narkowicz 2015)
       const float a = 2.51;
       const float b = 0.03;
       const float c = 2.43;
@@ -260,10 +264,38 @@ float4 RENDERDOC_TexDisplayPS(v2f IN) : SV_Target0
   }
   else if (tonemapMode == 3) {
       // Exposure mode
-      const float exposure = 1.0;
-      float3 x = -col.rgb * exposure;
-      x = clamp(x, float3(-50.0f, -50.0f, -50.0f), float3(50.0f, 50.0f, 50.0f));
-      col.rgb = float3(1.0f, 1.0f, 1.0f) - exp(x);
+      
+      float3 x = col.rgb * pow(2.0f, exposure);
+      x = clamp(x, 0.0f, 100.0f);
+      col.rgb = x;
+  }
+  else if (tonemapMode == 4) {
+      // ACES
+      float3 x = col.rgb;
+
+      // apply color transform matrix
+      float3x3 ACESInputMat = float3x3(
+          0.59719, 0.35458, 0.04823,
+          0.07600, 0.90834, 0.01566,
+          0.02840, 0.13383, 0.83777
+      );
+      x = mul(ACESInputMat, x);
+
+      // apply reference rendering transform (polynomial fit)
+      float3 a = x * (x + 0.0245786) - 0.000090537;
+      float3 b = x * (0.983729) + 0.4329510;
+      x = a / b;
+
+      // apply output device transform from ACES2065-1 to sRGB/Rec.709
+      float3x3 ACESOutputMat = float3x3(
+          1.60475, -0.53108, -0.07367,
+          -0.10208, 1.10813, -0.00605,
+          -0.00327, -0.07276, 1.07602
+      );
+      x = mul(ACESOutputMat, x);
+
+      // clamp to [0,1]
+      col.rgb = clamp(x, 0.0, 1.0);
   }
 
 

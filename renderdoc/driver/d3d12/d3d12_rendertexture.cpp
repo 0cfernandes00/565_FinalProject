@@ -366,7 +366,9 @@ bool D3D12Replay::RenderTextureInternal(D3D12_CPU_DESCRIPTOR_HANDLE rtv, Texture
 
   pixelData.DecodeYUV = 0;
   pixelData.DecodeYUV |= (cfg.decodeYUV ? 1 : 0);
-  pixelData.DecodeYUV |= ((cfg.tonemapMode & 3) << 2);
+  pixelData.DecodeYUV |= ((cfg.tonemapMode & 7) << 1);
+  uint32_t packedExposure = uint32_t((std::min(cfg.tonemapExposure, 3.96f) + 4.0f) / 8.0f * 0x0FFFFFFF); // map [-4, 4] to [0, 2^28 - 1]
+  pixelData.DecodeYUV |= (packedExposure << 4);
 
   if(!RDCISFINITE(pixelData.InverseRangeSize))
   {

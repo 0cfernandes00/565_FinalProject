@@ -644,8 +644,10 @@ bool GLReplay::RenderTextureInternal(TextureDisplay cfg, TexDisplayFlags flags)
 
   // hacky bit packing for tonemapMode because all 128 available bits of ubo are already being used :(
   ubo->DecodeYUV = cfg.decodeYUV ? 1 : 0;
-  ubo->DecodeYUV &= ~0xC;
-  ubo->DecodeYUV |= (cfg.tonemapMode << 2);
+  ubo->DecodeYUV &= ~0xE;
+  ubo->DecodeYUV |= ((cfg.tonemapMode & 7) << 1);
+  uint32_t packedExposure = uint32_t((std::min(cfg.tonemapExposure, 3.96f) + 4.0f) / 8.0f * 0x0FFFFFFF); // map [-4, 4] to [0, 2^28 - 1]
+  ubo->DecodeYUV |= (packedExposure << 4);
 
   ubo->YUVDownsampleRate = {};
   ubo->YUVAChannels = {};

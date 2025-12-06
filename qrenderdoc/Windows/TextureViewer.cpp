@@ -44,6 +44,7 @@
 #include "flowlayout/FlowLayout.h"
 #include "toolwindowmanager/ToolWindowManagerArea.h"
 #include "ui_TextureViewer.h"
+#include <iostream>
 
 float area(const QSizeF &s)
 {
@@ -507,6 +508,10 @@ TextureViewer::TextureViewer(ICaptureContext &ctx, QWidget *parent)
                    &TextureViewer::channelsWidget_selected);
   QObject::connect(ui->tonemapMode, OverloadedSlot<int>::of(&QComboBox::currentIndexChanged), this,
                    &TextureViewer::tonemapWidget_selected);
+  QObject::connect(ui->tonemapExposure, &QSlider::valueChanged, this, 
+                   &TextureViewer::tonemapExposureSlider_changed);
+  QObject::connect(ui->tonemapExposureValue, &QLineEdit::textChanged, this,
+                   &TextureViewer::tonemapExposureValue_changed);
   QObject::connect(ui->hdrMul, &QComboBox::currentTextChanged, [this] { UI_UpdateChannels(); });
   QObject::connect(ui->customShader, OverloadedSlot<int>::of(&QComboBox::currentIndexChanged), this,
                    &TextureViewer::channelsWidget_selected);
@@ -647,7 +652,7 @@ TextureViewer::TextureViewer(ICaptureContext &ctx, QWidget *parent)
 
   ui->channels->addItems({lit("RGBA"), lit("RGBM"), lit("YUVA decode"), tr("Custom")});
 
-  ui->tonemapMode->addItems({lit("None"), lit("Reinhard"), lit("ACES"), lit("Clamp")});
+  ui->tonemapMode->addItems({lit("None"), lit("Reinhard"), lit("Hable(ACES Approximation)"), lit("Clamp/Exposure"), lit("ACES2065-1")});
 
   ui->zoomOption->addItems({lit("10%"), lit("25%"), lit("50%"), lit("75%"), lit("100%"),
                             lit("200%"), lit("400%"), lit("800%")});
@@ -1312,6 +1317,7 @@ void TextureViewer::UI_OnTextureSelectionChanged(bool newAction)
 
     m_TextureSettings[m_TexDisplay.resourceId].displayType = qMax(0, ui->channels->currentIndex());
     m_TextureSettings[m_TexDisplay.resourceId].tonemapMode = qMax(0, ui->tonemapMode->currentIndex());
+    m_TextureSettings[m_TexDisplay.resourceId].tonemapExposure = (ui->tonemapExposure->value() / 100.0f) * 4.0f;
     m_TextureSettings[m_TexDisplay.resourceId].customShader = ui->customShader->currentText();
 
     m_TextureSettings[m_TexDisplay.resourceId].depth = ui->depthDisplay->isChecked();
@@ -1532,8 +1538,8 @@ void TextureViewer::UI_OnTextureSelectionChanged(bool newAction)
     if(m_Ctx.Config().TextureViewer_PerTexSettings && m_TextureSettings.contains(tex.resourceId))
     {
       ui->channels->setCurrentIndex(m_TextureSettings[tex.resourceId].displayType);
-      ui->tonemapMode->setCurrentIndex(m_TextureSettings[tex.resourceId].displayType);
-
+      ui->tonemapMode->setCurrentIndex(m_TextureSettings[tex.resourceId].tonemapMode);
+      ui->tonemapExposure->setValue(int(m_TextureSettings[tex.resourceId].tonemapExposure * 100.f / 4.f));
       ui->customShader->setCurrentText(m_TextureSettings[tex.resourceId].customShader);
 
       ui->channelRed->setChecked(m_TextureSettings[tex.resourceId].r);
@@ -1557,6 +1563,7 @@ void TextureViewer::UI_OnTextureSelectionChanged(bool newAction)
       // if we are using per-tex settings, reset back to RGB
       ui->channels->setCurrentIndex(0);
       ui->tonemapMode->setCurrentIndex(0);
+      ui->tonemapExposure->setValue(0); // default exposure = 0 * 4 / 100 = 0
 
       ui->customShader->setCurrentText(QString());
 
@@ -1872,12 +1879,46 @@ void TextureViewer::UI_UpdateChannels()
   UI_UpdateStatusText();
 }
 
-void TextureViewer::UI_UpdateTonemapping() {
+void TextureViewer::UI_UpdateTonemapping(bool sliderChanged) {
+
+#define SHOW(widget) widget->setVisible(true)
+#define HIDE(widget) widget->setVisible(false)
+#define ENABLE(widget) widget->setEnabled(true)
+#define DISABLE(widget) widget->setEnabled(false)
+
     m_TexDisplay.tonemapMode = ui->tonemapMode->currentIndex();
+
+    if (m_TexDisplay.tonemapMode == 3) {
+        SHOW(ui->tonemapExposure);
+        SHOW(ui->tonemapExposureLabel);
+        SHOW(ui->tonemapExposureValue);
+
+        if (sliderChanged) {
+            m_TexDisplay.tonemapExposure = float(ui->tonemapExposure->value()) * 4.0f / 100.0f;
+            ui->tonemapExposureValue->setText(QString::number(m_TexDisplay.tonemapExposure));
+        }
+        else {
+            m_TexDisplay.tonemapExposure = ui->tonemapExposureValue->text().toFloat();
+            ui->tonemapExposure->setValue(int(m_TexDisplay.tonemapExposure * 100.0f / 4.0f));
+        }
+        
+    }
+    else {
+        HIDE(ui->tonemapExposure);
+        HIDE(ui->tonemapExposureLabel);
+        HIDE(ui->tonemapExposureValue);
+    }
+    
+    
 
     INVOKE_MEMFN(RT_UpdateAndDisplay);
     INVOKE_MEMFN(RT_UpdateVisualRange);
     UI_UpdateStatusText();
+
+#undef HIDE
+#undef SHOW
+#undef ENABLE
+#undef DISABLE
 }
 
 void TextureViewer::SetupTextureTabs()
@@ -3021,6 +3062,8 @@ void TextureViewer::Reset()
 
   ui->channels->setCurrentIndex(0);
   ui->tonemapMode->setCurrentIndex(0);
+  ui->tonemapExposure->setValue(0); // default exposure = 0 * 4 / 100 = 0
+
   ui->overlay->setCurrentIndex(0);
 
   {

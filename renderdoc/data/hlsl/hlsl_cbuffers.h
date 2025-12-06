@@ -89,7 +89,7 @@ cbuffer TexDisplayPSCBuffer REG(b0)
   uint4 YUVDownsampleRate;
   uint4 YUVAChannels;
 
-  int DecodeYUV;
+  uint DecodeYUV;
 };
 
 cbuffer CheckerboardCBuffer REG(b0)

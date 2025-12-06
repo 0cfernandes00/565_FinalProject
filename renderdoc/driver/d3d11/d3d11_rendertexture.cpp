@@ -496,7 +496,9 @@ bool D3D11Replay::RenderTextureInternal(TextureDisplay cfg, TexDisplayFlags flag
 
   pixelData.DecodeYUV = 0;
   pixelData.DecodeYUV |= (cfg.decodeYUV ? 1 : 0);
-  pixelData.DecodeYUV |= ((cfg.tonemapMode & 3) << 2);
+  pixelData.DecodeYUV |= ((cfg.tonemapMode & 7) << 1);
+  uint32_t packedExposure = uint32_t((std::min(cfg.tonemapExposure, 3.96f) + 4.0f) / 8.0f * 0x0FFFFFFF); // map [-4, 4] to [0, 2^28 - 1]
+  pixelData.DecodeYUV |= (packedExposure << 4);
 
   if(!RDCISFINITE(pixelData.InverseRangeSize))
   {
@@ -838,7 +840,7 @@ bool D3D11Replay::RenderTextureInternal(TextureDisplay cfg, TexDisplayFlags flag
     pixelData.OutputDisplayFormat |= TEXDISPLAY_GAMMA_CURVE;
   }
 
-  //RDCLOG("DecodeYUV = %d, tonemapMode bits = %d", pixelData.DecodeYUV, (pixelData.DecodeYUV >> 2) & 3);
+  RDCLOG("DecodeYUV = %d, tonemapMode bits = %d", pixelData.DecodeYUV, (pixelData.DecodeYUV >> 1) & 0x7);
 
   ID3D11Buffer *vsCBuffer = GetDebugManager()->MakeCBuffer(&vertexData, sizeof(vertexData));
   ID3D11Buffer *psCBuffer = GetDebugManager()->MakeCBuffer(&pixelData, sizeof(pixelData));

@@ -255,8 +255,10 @@ bool VulkanReplay::RenderTextureInternal(TextureDisplay cfg, const ImageState &i
 
   // hacky bit packing for tonemapMode because all 128 available bits of ubo are already being used :(
   data->DecodeYUV = cfg.decodeYUV ? 1 : 0;
-  data->DecodeYUV &= ~0xC;
-  data->DecodeYUV |= (cfg.tonemapMode << 2);
+  data->DecodeYUV &= ~0xE;
+  data->DecodeYUV |= ((cfg.tonemapMode & 7) << 1);
+  uint32_t packedExposure = uint32_t((std::min(cfg.tonemapExposure, 3.96f) + 4.0f) / 8.0f * 0x0FFFFFFF); // map [-4, 4] to [0, 2^28 - 1]
+  data->DecodeYUV |= (packedExposure << 4);
 
   Vec4u YUVDownsampleRate = {};
   Vec4u YUVAChannels = {};
