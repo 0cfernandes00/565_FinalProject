@@ -4,6 +4,8 @@ University of Pennsylvania, CIS 565: GPU Programming and Architecture Fall 2025,
 
 _A project by Caroline Fernandes, Harris Kokkinakos, Christina Qiu, and Rachel Lin._
 
+[Project Pitch Document](https://github.com/0cfernandes00/565_FinalProject/blob/main/output_images/presentations/GPUFinalProjectPitch.pdf)
+
 ## Demos
 [Live Website](https://harriskoko.github.io/VSCode-KTX-Viewer/)
 
@@ -11,6 +13,13 @@ _A project by Caroline Fernandes, Harris Kokkinakos, Christina Qiu, and Rachel L
 
 Don Mccurdy's [website](https://github.com/donmccurdy/KTX2-Samples) shows the various compression types for KTX2 and were a great resource for us to test out our tool.
 We were able to support the majority of the 2d formats.
+
+
+<img src="output_images/vs_rgb8_linear.png" width="100"> <img src="output_images/vs_rgba8_linear.png" width="100"> <img src="output_images/vs_rgb9e5.png" width="100"> <img src="output_images/vs_r11g11b10.png" width="100"> <img src="output_images/vs_rgba16_linear.png" width="100">
+
+<img src="output_images/vs_bc1_v0.png" width="100"> <img src="output_images/vs_bc3_v0.png" width="100"> <img src="output_images/vs_bc4_v0.png" width="100"> <img src="output_images/vs_bc5_v0.png" width="100"> <img src="output_images/vs_bc7_v0.png" width="100">
+
+<img src="output_images/vs_etc1s.png" width="100"><img src="output_images/vs_uastc.png" width="100">
 
 # Sections 
 - [Introduction](https://github.com/0cfernandes00/565_FinalProject/blob/main/README.md#introduction)
@@ -72,7 +81,7 @@ WebGPU does not accept ETC1S or UASTC bitstreams directly. Instead, the viewer d
 ## Milestone Development
 
 ### Milestone 1
-[Milestone 1 PPT](https://docs.google.com/presentation/d/1itA7_H42KUoN_OxyCpAzT4X0u9w1Le3G9WOGZeSx79Q/edit?usp=sharing)
+[Milestone 1 PPT](https://github.com/0cfernandes00/565_FinalProject/blob/main/output_images/presentations/Milestone1Presentation.pdf)
 
 For Milestone 1, our goal was to render ktx2 textures in each of our pipelines.
 
@@ -90,7 +99,7 @@ RenderDoc
 <img src="output_images/bc1.png" width="100"> <img src="output_images/bc2.png" width="100"> <img src="output_images/bc3_lava.png" width="100"> <img src="output_images/bc4.png" width="100"> <img src="output_images/bc5.png" width="100"> <img src="output_images/bc7.png" width="100"> 
 
 ### Milestone 2
-[Milestone 2 PPT](https://docs.google.com/presentation/d/1YKJE7xOdjkFahiKk9SEXPoTkRgYl_AvQdaPusEAIyLI/edit?usp=sharing)
+[Milestone 2 PPT](https://github.com/0cfernandes00/565_FinalProject/blob/main/output_images/presentations/Milestone2Presentation.pdf)
 
 For Milestone 2, our goal was to support HDR and add mobile GPU texture formats.
 
@@ -126,7 +135,7 @@ RenderDoc
 
 
 ### Milestone 3
-[Milestone 3 PPT](https://docs.google.com/presentation/d/1SyLAogpgcqYIloEKJvgi5zclnlhsPBSzcjfTvNP7VVw/edit?usp=sharing)
+[Milestone 3 PPT](https://github.com/0cfernandes00/565_FinalProject/blob/main/output_images/presentations/Milestone3Presentation.pdf)
 
 For Milestone 3, our goal was to add UI and other features to expand functionality.
 
