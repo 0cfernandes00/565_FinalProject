@@ -19,8 +19,16 @@ We were able to support the majority of the 2d formats.
 
 <img src="output_images/vs_bc1_v0.png" width="100"> <img src="output_images/vs_bc3_v0.png" width="100"> <img src="output_images/vs_bc4_v0.png" width="100"> <img src="output_images/vs_bc5_v0.png" width="100"> <img src="output_images/vs_bc7_v0.png" width="100">
 
-<img src="output_images/vs_etc1s.png" width="100"><img src="output_images/vs_uastc.png" width="100">
+<img src="output_images/vs_etc1s.png" width="100"> <img src="output_images/vs_uastc.png" width="100">
 
+The full list of supported compression types include:
+- BC1-7
+- ETC1S
+- ETC1/2(on mobile)
+- UASTC
+- basis 
+- uncompressed (RGBA8, etc.)
+  
 # Sections 
 - [Introduction](https://github.com/0cfernandes00/565_FinalProject/blob/main/README.md#introduction)
 - [Technical Overview](https://github.com/0cfernandes00/565_FinalProject/blob/main/README.md#technical-overview)
