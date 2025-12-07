@@ -5,6 +5,12 @@ University of Pennsylvania, CIS 565: GPU Programming and Architecture Fall 2025,
 _A project by Caroline Fernandes, Harris Kokkinakos, Christina Qiu, and Rachel Lin._
 
 ## Demos
+[Live Website](https://harriskoko.github.io/VSCode-KTX-Viewer/)
+
+## Supported Compression Types
+
+Don Mccurdy's [website](https://github.com/donmccurdy/KTX2-Samples) shows the various compression types for KTX2 and were a great resource for us to test out our tool.
+We were able to support the majority of the 2d formats.
 
 # Sections 
 - [Introduction](https://github.com/0cfernandes00/565_FinalProject/blob/main/README.md#introduction)
@@ -14,7 +20,7 @@ _A project by Caroline Fernandes, Harris Kokkinakos, Christina Qiu, and Rachel L
 - [References](https://github.com/0cfernandes00/565_FinalProject/blob/main/README.md#references)
 
 ## Introduction
-KTX2Viewer was created to provide an open-source cross-platform SDR + HDR viewer that allows developers and artists to accurately visualize KTX2 textures. The project aims to extend RenderDoc and WebGPU/VSCode's gLTF plugin. Users will have access to information such as channels, alpha blending, mipmap visualization, and tonemapping to interact with.
+KTX2Viewer was created to provide an open-source cross-platform SDR + HDR viewer that allows developers and artists to accurately visualize KTX2 textures. The project aims to extend RenderDoc and VSCode's gLTF plugin. Users will have access to information such as channels, alpha blending, mipmap visualization, and tonemapping to interact with.
 
 Our motivation for this project came from Binomial co-founders Steph Hurlburt and Rich Geldreich. They pointed out the need in the industry for a tool that would allow previewing of KTX2 textures.
 
@@ -24,13 +30,11 @@ Our motivation for this project came from Binomial co-founders Steph Hurlburt an
 KTX2 is a universal container format for GPU textures. When working with GPU textures, there are many different texture compression types that GPUs use based on the type of GPU. For example, desktop GPUs often rely on BC compression types whereas mobile GPUs may use ETC. There are various versions of these compression types as well based on the type of texture, required details, and file size restrictions. KTX2 is a wrapper for all of these, allowing for the use of a singular file type for any of these compression types. Game studios and other companies relying on rendering often pre-compress their textures so that less data has to be sent to the GPU via PCIE. KTX2 helps developers organize and upload these texture efficiently. 
 
 ### Format Decoding/Encoding
-Our KTX2Viewer aims to support both native GPU block-compressed formats and Basis Universal formats by implementing a full KTX2 parsing and transcoding pipeline in WebGPU. The system uses two core components:
+Our KTX2Viewer aims to support both native GPU block-compressed formats and Basis Universal formats by implementing a full KTX2 parsing and transcoding pipeline in WebGPU. We currently utilize one library:
 
 * <b>basis_transcoder.js / basis_transcoder.wasm</b> — The Binomial Basis Universal transcoder, used for converting ETC1S and UASTC texture payloads into GPU-ready BC formats.
 
-* <b>libktx.js / libktx.wasm</b> — The canonical KTX2 parsing library from the Khronos Group, used to read container metadata, global codebooks, Data Format Descriptors (DFDs), and mip level tables.
-
-KTX2 files may store texture data in one of two Basis Universal supercompressed formats:
+KTX2 files may store texture data in one of two universal formats:
 
 * <b>ETC1S</b> — A highly compressed, entropy-coded format using global codebooks stored in the KTX2 supercompression data block.
 
