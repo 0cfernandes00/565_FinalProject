@@ -26,6 +26,8 @@ We were able to support the majority of the 2d formats.
 
 <img src="output_images/vs_etc1s.png" width="80"> <img src="output_images/vs_uastc.png" width="80">
 
+<img src="output_images/etc1.png" width="90"> <img src="output_images/etc2.png" width="90">
+
 The full list of supported compression types include:
 - BC1-7
 - ETC1S
