@@ -17,6 +17,8 @@ Users will have 3 different ways to access our work:
 ## Demo Video
 ![KTX2 Viewer Demo1](output_images/ktx2viewer_1gif.gif)
 
+PR: https://github.com/AnalyticalGraphicsInc/gltf-vscode/pull/275
+
 ## Supported Compression Types
 
 Don Mccurdy's [website](https://github.com/donmccurdy/KTX2-Samples) shows the various compression types for KTX2 and were a great resource for us to test out our tool.
