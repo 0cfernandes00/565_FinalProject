@@ -19,7 +19,7 @@ Users will have 3 different ways to access our work:
 Don Mccurdy's [website](https://github.com/donmccurdy/KTX2-Samples) shows the various compression types for KTX2 and were a great resource for us to test out our tool.
 We were able to support the majority of the 2d formats.
 
-The images below were generate from our VSCode plugin.
+The images below were generated from our VSCode plugin.
 
 <img src="output_images/vs_rgb8_linear.png" width="80"> <img src="output_images/vs_rgba8_linear.png" width="80"> <img src="output_images/vs_rgb9e5.png" width="80"> <img src="output_images/vs_r11g11b10.png" width="80"> <img src="output_images/vs_rgba16_linear.png" width="80"> <img src="output_images/vs_rgba32.png" width="75">
 
@@ -43,7 +43,7 @@ The full list of supported compression types for each of our pipelines can be fo
 ## Introduction
 KTX2Viewer was created to provide an open-source cross-platform SDR + HDR viewer that allows developers and artists to accurately visualize KTX2 textures. The project aims to extend RenderDoc and VSCode's gLTF plugin. Users will have access to information such as channels, alpha blending, mipmap visualization, and tonemapping to interact with.
 
-Our motivation for this project came from Binomial co-founders Steph Hurlburt and Rich Geldreich. They pointed out the need in the industry for a tool that would allow previewing of KTX2 textures.
+Our motivation for this project came from Binomial co-founders Steph Hurlburt and Rich Geldreich. They pointed out the need in the industry for a tool that would allow viewing of KTX2 textures.
 
 ## Technical Overview
 
@@ -94,17 +94,39 @@ WebGPU does not accept ETC1S or UASTC bitstreams directly. Instead, the viewer d
 
 1. Filtering/Sampling Methods
    * Trilinear - smooth/aliased, mip blend
+
+     <img src="output_images/trilinear.png" width="400">
    * Bilinear - smooth/aliased, sharp mips
+
+     <img src="output_images/bilinear.png" width="400">
    * Nearest - sharp/pixelated
+
+     <img src="output_images/nearest.png" width="400">
    * Anisotropic - high quality
-2. Mipmap Previews
+
+     <img src="output_images/anisotropic.png" width="400">
+2. Mipmap Viewing
    * Allows user to scroll through existing mip levels.
-3. Tonemapping
+
+    ex: Mip levels 1, 4, 6, and 8
+   
+     <img src="output_images/mip1.png" width="200"> <img src="output_images/mip4.png" width="200"> <img src="output_images/mip6.png" width="200"> <img src="output_images/mip8.png" width="200">
+4. Tonemapping
    * Reinhard
+     
+     <img src="output_images/reinhard.png" width="400">
    * Hable
+
+     <img src="output_images/hable.png" width="400">
    * ACES
+  
+     <img src="output_images/aces.png" width="400">
    * Exposure (as an additional tonemapping step)
-4. Texture Info (displays basic texture information)
+
+     ex: Exposure levels -2, -1, 0, 1, and 2
+     
+     <img src="output_images/aces_exposure-2.png" width="150"> <img src="output_images/aces_exposure-1.png" width="150"> <img src="output_images/aces.png" width="150"> <img src="output_images/aces_exposure+1.png" width="150"> <img src="output_images/aces_exposure+2.png" width="150">
+5. Texture Info (displays basic texture information)
    * Dimensions
    * Format (BC1, BC6H, ETC1S, etc.)
    * Number of Mip Levels
@@ -114,7 +136,7 @@ WebGPU does not accept ETC1S or UASTC bitstreams directly. Instead, the viewer d
    * Supercompression
    * KVD Information
    * DFD Information
-5. Console Log
+6. Console Log
    * Logs information on textures loaded/errors encountered for debugging purposes.
 
 ## Milestone Development
@@ -153,15 +175,15 @@ Outcome:
 
 VSCode Plugin
 
-During this milestone, HDR was integrated into the VSCode plugin. This was enabled by the use of VK_FORMATs 143 and 144, the formats for BC6H signed and unsigned rendering. Additionally, a slider was added to change exposer based on the ACES tonemapping. This enables the high range of color values to be properly displayed to the screen using the equation below where x represents the input hdr color.
+During this milestone, HDR was integrated into the VSCode plugin. This was enabled by the use of VK_FORMATs 143 and 144, the formats for BC6H signed and unsigned rendering. Additionally, a slider was added to change exposure based on the ACES tonemapping. This enables the high range of color values to be properly displayed to the screen using the equation below where x represents the input hdr color.
 
 <img width="819" height="222" alt="Screenshot 2025-11-24 144132" src="https://github.com/user-attachments/assets/b309a536-dc6d-4a85-94fa-6b9ef62e24d3" />
 
-A common issue with rendering HDR is the fidelity of colors. Many renderers struggle with color banding, an artifact produced by downsampling colors, causing noticable differences in colors rather than smooth gradients. The image on the left showcasees the VSCode extention's rendering of a gradient fromm white to black smoothly. The image on the right shows what it would look like if it were incorrectly rendering HDR with noticable color banding.
+A common issue with rendering HDR is the fidelity of colors. Many renderers struggle with color banding, an artifact produced by downsampling colors, causing noticeable differences in colors rather than smooth gradients. The image on the left showcases the VSCode extension's rendering of a gradient from white to black smoothly. The image on the right shows what it would look like if it were incorrectly rendering HDR with noticeable color banding.
 
 <img width="748" height="325" alt="Screenshot 2025-11-24 141826" src="https://github.com/user-attachments/assets/d58c82bc-2fe9-4634-8fe6-ba0a6514f0ac" />
 
-Additionally, we downloaded HDR files from polyhaven to test the capabilities of our previewer. Below shows images from the previewer on an HDR file compressed using unsigned BC6H and exported as a ktx2 file at varying exposure levels, showcasing the previewer's ability to maintain color fideelity within bright white shades and dark black shades.
+Additionally, we downloaded HDR files from polyhaven to test the capabilities of our viewer. Below shows images from the viewer on an HDR file compressed using unsigned BC6H and exported as a ktx2 file at varying exposure levels, showcasing the viewer's ability to maintain color fidelity within bright white shades and dark black shades.
 
 <img width="767" height="409" alt="Screenshot 2025-11-24 145138" src="https://github.com/user-attachments/assets/e3a81a7d-072b-4729-84e3-ec2cb0a968c1" />
 
@@ -182,7 +204,7 @@ Outcome:
 - User Interaction
   - alpha channels
   - blending functions
-- gltf validate
+- glTF validate
 - Tonemapping mode UI
   - None    
   - Reinhard
@@ -190,7 +212,7 @@ Outcome:
   - Exposure/Clamp
  
 #### Web App and UI Overhaul
-The VSCode plugin was adapted to also be used for a Web App version of the KTX2 viewer. Additioanlly, the UI was completely overhauled to have more information displayed to the user about the file they have loaded as well as more control over the preview. Mip and color channel viewing were added as well as texture info and log panels. 
+The VSCode plugin was adapted to also be used for a Web App version of the KTX2 viewer. Additionally, the UI was completely overhauled to have more information displayed to the user about the file they have loaded as well as more control over the view. Mip and color channel viewing were added as well as texture info and log panels. 
 
 <img width="2555" height="1347" alt="Screenshot 2025-12-01 120043" src="https://github.com/user-attachments/assets/b64347eb-895b-4d34-8f96-deff5bfe52e7" />
 <img width="447" height="223" alt="Screenshot 2025-12-01 120024" src="https://github.com/user-attachments/assets/e866ac5e-8d84-46d2-b7a9-a396760f8137" />
@@ -231,13 +253,13 @@ Open the root of the folder in VSCode and run the following commands
 3) press F5 to open an new window
 4) ctrl+shift+p will open the search bar
 5) type WebGPU and select the first option
-Click the file selection to open a texture
+6) Click the file selection to open a texture
 
 ### RenderDoc
 Users can clone the repo, which will contain all of the external RenderDoc source code and binomial's transcoder.
 Then they can simply open the solution file and build.
 
-To preview a texture, drag and drop it into the texture field of the RenderDoc's viewport.
+To view a texture, drag and drop it into the texture field of the RenderDoc's viewport.
 
 ## References
 
