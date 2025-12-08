@@ -36,9 +36,11 @@ The full list of supported compression types for each of our pipelines can be fo
 # Sections 
 - [Introduction](https://github.com/0cfernandes00/565_FinalProject/blob/main/README.md#introduction)
 - [Technical Overview](https://github.com/0cfernandes00/565_FinalProject/blob/main/README.md#technical-overview)
+- [Additional Features](https://github.com/0cfernandes00/565_FinalProject?tab=readme-ov-file#additional-features)
 - [Milestone Development](https://github.com/0cfernandes00/565_FinalProject/blob/main/README.md#milestone-development)
 - [Setup](https://github.com/0cfernandes00/565_FinalProject/blob/main/README.md#setup)
 - [References](https://github.com/0cfernandes00/565_FinalProject/blob/main/README.md#references)
+
 
 ## Introduction
 KTX2Viewer was created to provide an open-source cross-platform SDR + HDR viewer that allows developers and artists to accurately visualize KTX2 textures. The project aims to extend RenderDoc and VSCode's gLTF plugin. Users will have access to information such as channels, alpha blending, mipmap visualization, and tonemapping to interact with.
@@ -83,8 +85,8 @@ WebGPU does not accept ETC1S or UASTC bitstreams directly. Instead, the viewer d
 
 3. Selection of GPU Format
    * The viewer currently targets high-quality BC formats for maximum visual fidelity:
-     * ETC1S → BC7
-     * UASTC → BC7
+     * ETC1S → RGBA32 
+     * UASTC → RGBA32 
    * Native BC formats (BC1/BC3/BC4/BC5/BC7) bypass the transcoder and are uploaded directly.
 
 4. Block-Compressed Upload to WebGPU
