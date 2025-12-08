@@ -125,7 +125,7 @@ WebGPU does not accept ETC1S or UASTC bitstreams directly. Instead, the viewer d
 
      ex: Exposure levels -2, -1, 0, 1, and 2
      
-     <img src="output_images/aces_exposure-2.png" width="200"> <img src="output_images/aces_exposure-1.png" width="200"> <img src="output_images/aces.png" width="200"> <img src="output_images/aces_exposure+1.png" width="200"> <img src="output_images/aces_exposure+2.png" width="200">
+     <img src="output_images/aces_exposure-2.png" width="150"> <img src="output_images/aces_exposure-1.png" width="150"> <img src="output_images/aces.png" width="150"> <img src="output_images/aces_exposure+1.png" width="150"> <img src="output_images/aces_exposure+2.png" width="150">
 5. Texture Info (displays basic texture information)
    * Dimensions
    * Format (BC1, BC6H, ETC1S, etc.)
