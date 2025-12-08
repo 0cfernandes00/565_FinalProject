@@ -89,6 +89,33 @@ WebGPU does not accept ETC1S or UASTC bitstreams directly. Instead, the viewer d
 
 4. Block-Compressed Upload to WebGPU
    * After transcoding, mip levels are padded to WebGPU’s 256-byte bytesPerRow alignment using a block-row–aware padding routine. The texture is then created and uploaded level-by-level using the native WebGPU API.
+  
+## Additional Features
+
+1. Filtering/Sampling Methods
+   * Trilinear - smooth/aliased, mip blend
+   * Bilinear - smooth/aliased, sharp mips
+   * Nearest - sharp/pixelated
+   * Anisotropic - high quality
+2. Mipmap Previews
+   * Allows user to scroll through existing mip levels.
+3. Tonemapping
+   * Reinhard
+   * Hable
+   * ACES
+   * Exposure (as an additional tonemapping step)
+4. Texture Info (displays basic texture information)
+   * Dimensions
+   * Format (BC1, BC6H, ETC1S, etc.)
+   * Number of Mip Levels
+   * File Size
+   * Estimated GPU Memory
+   * Compression Amount
+   * Supercompression
+   * KVD Information
+   * DFD Information
+5. Console Log
+   * Logs information on textures loaded/errors encountered for debugging purposes.
 
 ## Milestone Development
 
