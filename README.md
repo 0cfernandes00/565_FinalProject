@@ -5,6 +5,7 @@ University of Pennsylvania, CIS 565: GPU Programming and Architecture Fall 2025,
 _A project by Caroline Fernandes, Harris Kokkinakos, Christina Qiu, and Rachel Lin._
 
 [Project Pitch Document](https://github.com/0cfernandes00/565_FinalProject/blob/main/output_images/presentations/GPUFinalProjectPitch.pdf)
+
 [GPU Final Presentation](https://docs.google.com/presentation/d/1WEUUk8hyXxQYHLImypmyG5MaDGBbxg-pb-nr4zqZeYo/edit?usp=sharing)
 
 ## Demos
@@ -12,14 +13,13 @@ _A project by Caroline Fernandes, Harris Kokkinakos, Christina Qiu, and Rachel L
 
 Users will have 3 different ways to access our work:
 - Inside of the glTF VSCode plugin, our tool is launched when users click the "Open KTX2 Viewer" button within the glTF preview
+  - PR: https://github.com/AnalyticalGraphicsInc/gltf-vscode/pull/275
 - Our standalone website [github](https://github.com/HarrisKoko/VSCode-KTX-Viewer.git)
 - RenderDoc extension 
 
 ## Demo Video
 ![KTX2 Viewer Demo1](output_images/ktx2viewer_1gif.gif)
 ![KTX2 Viewer Demo2](output_images/ktx2viewer_2gif2.gif)
-
-PR: https://github.com/AnalyticalGraphicsInc/gltf-vscode/pull/275
 
 ## Supported Compression Types
 
@@ -50,7 +50,7 @@ The full list of supported compression types for each of our pipelines can be fo
 
 
 ## Introduction
-KTX2Viewer was created to provide an open-source cross-platform SDR + HDR viewer that allows developers and artists to accurately visualize KTX2 textures. The project aims to extend RenderDoc and VSCode's gLTF plugin. Users will have access to information such as channels, alpha blending, mipmap visualization, and tonemapping to interact with.
+KTX2 Viewer was created to provide an open-source cross-platform SDR + HDR viewer that allows developers and artists to accurately visualize KTX2 textures. The project aims to extend RenderDoc and VSCode's gLTF plugin. Users will have access to information such as channels, alpha blending, mipmap visualization, and tonemapping to interact with.
 
 Our motivation for this project came from Binomial co-founders Steph Hurlburt and Rich Geldreich. They pointed out the need in the industry for a tool that would allow viewing of KTX2 textures.
 
@@ -60,7 +60,7 @@ Our motivation for this project came from Binomial co-founders Steph Hurlburt an
 KTX2 is a universal container format for GPU textures. When working with GPU textures, there are many different texture compression types that GPUs use based on the type of GPU. For example, desktop GPUs often rely on BC compression types whereas mobile GPUs may use ETC. There are various versions of these compression types as well based on the type of texture, required details, and file size restrictions. KTX2 is a wrapper for all of these, allowing for the use of a singular file type for any of these compression types. Game studios and other companies relying on rendering often pre-compress their textures so that less data has to be sent to the GPU via PCIE. KTX2 helps developers organize and upload these texture efficiently. 
 
 ### Format Decoding/Encoding
-Our KTX2Viewer aims to support both native GPU block-compressed formats and Basis Universal formats by implementing a full KTX2 parsing and transcoding pipeline in WebGPU. We currently utilize one library:
+Our KTX2 Viewer aims to support both native GPU block-compressed formats and Basis Universal formats by implementing a full KTX2 parsing and transcoding pipeline in WebGPU. We currently utilize one library:
 
 * <b>basis_transcoder.js / basis_transcoder.wasm</b> — The Binomial Basis Universal transcoder, used for converting ETC1S and UASTC texture payloads into GPU-ready BC formats.
 
@@ -118,8 +118,8 @@ WebGPU does not accept ETC1S or UASTC bitstreams directly. Instead, the viewer d
    * Allows user to scroll through existing mip levels.
 
     ex: Mip levels 1, 4, 6, and 8
-   
-     <img src="output_images/mip1.png" width="200"> <img src="output_images/mip4.png" width="200"> <img src="output_images/mip6.png" width="200"> <img src="output_images/mip8.png" width="200">
+
+     <img src="output_images/mip1.png" width="150"> <img src="output_images/mip4.png" width="150"> <img src="output_images/mip6.png" width="150"> <img src="output_images/mip8.png" width="150">
 4. Tonemapping
    * Reinhard
      
