@@ -14,6 +14,9 @@ Users will have 3 different ways to access our work:
 - Our standalone website [github](https://github.com/HarrisKoko/VSCode-KTX-Viewer.git)
 - RenderDoc extension 
 
+## Demo Video
+![KTX2 Viewer Demo1](output_images/ktx2viewer_1gif.gif)
+
 ## Supported Compression Types
 
 Don Mccurdy's [website](https://github.com/donmccurdy/KTX2-Samples) shows the various compression types for KTX2 and were a great resource for us to test out our tool.
