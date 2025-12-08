@@ -48,10 +48,9 @@ IO_LOCATION(0) in vec2 uv;
 IO_LOCATION(0) out vec4 color_out;
 
 
-// bit unpack DecodeYUV into decodeYUV and tonemapMode
-int decodeYUV = (texdisplay.DecodeYUV & 1);
-int tonemapMode = (texdisplay.DecodeYUV >> 2) & 3;
-
+// bit unpack DecodeYUV into decodeYUV and tonemapMode; bit 0 for decodeYUV, bits 1-3 for tonemapMode
+int decodeYUV = (uintBitsToUint(texdisplay.DecodeYUV) & 0x1) != 0u;
+int tonemapMode = int((uintBitsToUint(texdisplay.DecodeYUV) >> 1) & 0x7u);
 
 float ConvertSRGBToLinear(float srgb)
 {
@@ -332,8 +331,11 @@ void main(void)
       col.rgb = clamp((col.rgb * (a*col.rgb + b)) / (col.rgb * (c*col.rgb + d) + e), 0.0, 1.0);
   } else if (tonemapMode == 3) {
       // Exposure mode
-      float exposure = 1.0;
-      col.rgb = vec3(1.0) - exp(-col.rgb * exposure);
+      float exposure = 1.0//texdisplay.Exposure;
+
+      vec3 x = col.rgb * pow(2.0, Exposure);
+      x = clamp(x, 0.0, 100.0);
+      col.rgb = x;
   }
 
   float exposure = 1.0;

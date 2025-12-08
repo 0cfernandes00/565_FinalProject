@@ -92,6 +92,7 @@ struct TexSettings
   {
     displayType = 0;
     tonemapMode = 0;
+    tonemapExposure = 1.0f;
     r = g = b = true;
     a = false;
     flip_y = false;
@@ -105,7 +106,8 @@ struct TexSettings
   }
 
   int displayType;    // 0 - RGBA, 1 - RGBM, 2 - YUV Decode, 3 - Custom
-  int tonemapMode;      // 0 - none, 1 - Reinhard, 2 - ACES, 3 = clamp
+  int tonemapMode;      // 0 - none, 1 - Reinhard, 2 - Hable, 3 = clamp, 4 = ACES
+  float tonemapExposure;
   QString customShader;
   bool r, g, b, a;
   bool flip_y;
@@ -234,7 +236,9 @@ private slots:
   void channelsWidget_mouseClicked(QMouseEvent *event);
   void channelsWidget_toggled(bool checked) { UI_UpdateChannels(); }
   void channelsWidget_selected(int index) { UI_UpdateChannels(); }
-  void tonemapWidget_selected(int index) { UI_UpdateTonemapping(); }
+  void tonemapWidget_selected(int index) { UI_UpdateTonemapping(true); }
+  void tonemapExposureSlider_changed(int index) { UI_UpdateTonemapping(true); }
+  void tonemapExposureValue_changed(const QString &path) { UI_UpdateTonemapping(false); }
 protected:
   void enterEvent(QEvent *event) override;
   void showEvent(QShowEvent *event) override;
@@ -254,7 +258,7 @@ private:
   void UI_SetHistogramRange(const TextureDescription *tex, CompType typeCast);
 
   void UI_UpdateChannels();
-  void UI_UpdateTonemapping();
+  void UI_UpdateTonemapping(bool sliderChanged); // either the slider changed or the text changed
 
   void HighlightUsage();
 

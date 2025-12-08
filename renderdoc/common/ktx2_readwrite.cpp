@@ -667,6 +667,7 @@ static ResourceFormat VKFormat2ResourceFormat(uint32_t vkFormat)
       ret.compCount = 4;
       ret.compByteWidth = 1;
       ret.compType = CompType::UNormSRGB;
+      break;
 
     case 159:    // VK_FORMAT_ASTC_5x4_UNORM_BLOCK
       ret.type = ResourceFormatType::ASTC;

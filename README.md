@@ -1,11 +1,38 @@
-# VSCode and RenderDoc KTX2 Viewer
+# VSCode and RenderDoc HDR KTX2 Viewer
 
 University of Pennsylvania, CIS 565: GPU Programming and Architecture Fall 2025, Final Project.
 
 _A project by Caroline Fernandes, Harris Kokkinakos, Christina Qiu, and Rachel Lin._
 
-## Demos
+[Project Pitch Document](https://github.com/0cfernandes00/565_FinalProject/blob/main/output_images/presentations/GPUFinalProjectPitch.pdf)
 
+## Demos
+[Live Website](https://harriskoko.github.io/VSCode-KTX-Viewer/)
+
+Users will have 3 different ways to access our work:
+- Inside of the glTF VSCode plugin, our tool is launched when users load a glTF with KTX2 textures
+- Our standalone website [github](https://github.com/HarrisKoko/VSCode-KTX-Viewer.git)
+- RenderDoc extension 
+
+## Supported Compression Types
+
+Don Mccurdy's [website](https://github.com/donmccurdy/KTX2-Samples) shows the various compression types for KTX2 and were a great resource for us to test out our tool.
+We were able to support the majority of the 2d formats.
+
+The images below were generate from our VSCode plugin.
+
+<img src="output_images/vs_rgb8_linear.png" width="80"> <img src="output_images/vs_rgba8_linear.png" width="80"> <img src="output_images/vs_rgb9e5.png" width="80"> <img src="output_images/vs_r11g11b10.png" width="80"> <img src="output_images/vs_rgba16_linear.png" width="80"> <img src="output_images/vs_rgba32.png" width="75">
+
+<img src="output_images/vs_bc1_v0.png" width="80"> <img src="output_images/vs_bc3_v0.png" width="80"> <img src="output_images/vs_bc4_v0.png" width="80"> <img src="output_images/vs_bc5_v0.png" width="80"> <img src="output_images/vs_bc7_v0.png" width="80">
+
+<img src="output_images/vs_etc1s.png" width="80"> <img src="output_images/vs_uastc.png" width="80">
+
+<img src="output_images/etc1.png" width="90"> <img src="output_images/etc2.png" width="90">
+
+(ETC1 & ETC2 files were loaded from an android device)
+
+The full list of supported compression types for each of our pipelines can be found [here](https://docs.google.com/spreadsheets/d/1okcDSxKrtEwkA8DIzs-acaOrm2SIIE2WCJGXvDYgtkw/edit?usp=sharing)
+  
 # Sections 
 - [Introduction](https://github.com/0cfernandes00/565_FinalProject/blob/main/README.md#introduction)
 - [Technical Overview](https://github.com/0cfernandes00/565_FinalProject/blob/main/README.md#technical-overview)
@@ -14,26 +41,21 @@ _A project by Caroline Fernandes, Harris Kokkinakos, Christina Qiu, and Rachel L
 - [References](https://github.com/0cfernandes00/565_FinalProject/blob/main/README.md#references)
 
 ## Introduction
-KTX2Viewer was created to provide an open-source cross-platform SDR + HDR viewer that allows developers and artists to accurately visualize KTX2 textures. The project aims to extend RenderDoc and WebGPU/VSCode's gLTF plugin. Users will have access to information such as channels, alpha blending, mipmap visualization, and tonemapping to interact with.
+KTX2Viewer was created to provide an open-source cross-platform SDR + HDR viewer that allows developers and artists to accurately visualize KTX2 textures. The project aims to extend RenderDoc and VSCode's gLTF plugin. Users will have access to information such as channels, alpha blending, mipmap visualization, and tonemapping to interact with.
 
 Our motivation for this project came from Binomial co-founders Steph Hurlburt and Rich Geldreich. They pointed out the need in the industry for a tool that would allow previewing of KTX2 textures.
 
 ## Technical Overview
 
 **What is KTX2?**
-KTX2 is 
-TODO: Harris add details for what KTX2 is/relevance in gpu textures community
-
-TODO: Rachel explain tonemapping HDR process
+KTX2 is a universal container format for GPU textures. When working with GPU textures, there are many different texture compression types that GPUs use based on the type of GPU. For example, desktop GPUs often rely on BC compression types whereas mobile GPUs may use ETC. There are various versions of these compression types as well based on the type of texture, required details, and file size restrictions. KTX2 is a wrapper for all of these, allowing for the use of a singular file type for any of these compression types. Game studios and other companies relying on rendering often pre-compress their textures so that less data has to be sent to the GPU via PCIE. KTX2 helps developers organize and upload these texture efficiently. 
 
 ### Format Decoding/Encoding
-Our KTX2Viewer aims to support both native GPU block-compressed formats and Basis Universal formats by implementing a full KTX2 parsing and transcoding pipeline in WebGPU. The system uses two core components:
+Our KTX2Viewer aims to support both native GPU block-compressed formats and Basis Universal formats by implementing a full KTX2 parsing and transcoding pipeline in WebGPU. We currently utilize one library:
 
 * <b>basis_transcoder.js / basis_transcoder.wasm</b> — The Binomial Basis Universal transcoder, used for converting ETC1S and UASTC texture payloads into GPU-ready BC formats.
 
-* <b>libktx.js / libktx.wasm</b> — The canonical KTX2 parsing library from the Khronos Group, used to read container metadata, global codebooks, Data Format Descriptors (DFDs), and mip level tables.
-
-KTX2 files may store texture data in one of two Basis Universal supercompressed formats:
+KTX2 files may store texture data in one of two universal formats:
 
 * <b>ETC1S</b> — A highly compressed, entropy-coded format using global codebooks stored in the KTX2 supercompression data block.
 
@@ -67,11 +89,38 @@ WebGPU does not accept ETC1S or UASTC bitstreams directly. Instead, the viewer d
 
 4. Block-Compressed Upload to WebGPU
    * After transcoding, mip levels are padded to WebGPU’s 256-byte bytesPerRow alignment using a block-row–aware padding routine. The texture is then created and uploaded level-by-level using the native WebGPU API.
+  
+## Additional Features
+
+1. Filtering/Sampling Methods
+   * Trilinear - smooth/aliased, mip blend
+   * Bilinear - smooth/aliased, sharp mips
+   * Nearest - sharp/pixelated
+   * Anisotropic - high quality
+2. Mipmap Previews
+   * Allows user to scroll through existing mip levels.
+3. Tonemapping
+   * Reinhard
+   * Hable
+   * ACES
+   * Exposure (as an additional tonemapping step)
+4. Texture Info (displays basic texture information)
+   * Dimensions
+   * Format (BC1, BC6H, ETC1S, etc.)
+   * Number of Mip Levels
+   * File Size
+   * Estimated GPU Memory
+   * Compression Amount
+   * Supercompression
+   * KVD Information
+   * DFD Information
+5. Console Log
+   * Logs information on textures loaded/errors encountered for debugging purposes.
 
 ## Milestone Development
 
 ### Milestone 1
-[Milestone 1 PPT](https://docs.google.com/presentation/d/1itA7_H42KUoN_OxyCpAzT4X0u9w1Le3G9WOGZeSx79Q/edit?usp=sharing)
+[Milestone 1 PPT](https://github.com/0cfernandes00/565_FinalProject/blob/main/output_images/presentations/Milestone1Presentation.pdf)
 
 For Milestone 1, our goal was to render ktx2 textures in each of our pipelines.
 
@@ -89,13 +138,17 @@ RenderDoc
 <img src="output_images/bc1.png" width="100"> <img src="output_images/bc2.png" width="100"> <img src="output_images/bc3_lava.png" width="100"> <img src="output_images/bc4.png" width="100"> <img src="output_images/bc5.png" width="100"> <img src="output_images/bc7.png" width="100"> 
 
 ### Milestone 2
-[Milestone 2 PPT](https://docs.google.com/presentation/d/1YKJE7xOdjkFahiKk9SEXPoTkRgYl_AvQdaPusEAIyLI/edit?usp=sharing)
+[Milestone 2 PPT](https://github.com/0cfernandes00/565_FinalProject/blob/main/output_images/presentations/Milestone2Presentation.pdf)
 
 For Milestone 2, our goal was to support HDR and add mobile GPU texture formats.
 
 Outcome:
-- Tonemapping
+- Tonemapping modes 
+  - Reinhard (in progress)
+  - ACES (in progress)
+  - Exposure 
 - HDR
+  - BC6H
 - Supercompression formats
 
 VSCode Plugin
@@ -112,20 +165,72 @@ Additionally, we downloaded HDR files from polyhaven to test the capabilities of
 
 <img width="767" height="409" alt="Screenshot 2025-11-24 145138" src="https://github.com/user-attachments/assets/e3a81a7d-072b-4729-84e3-ec2cb0a968c1" />
 
+
 RenderDoc
 
-<img src="output_images/etc1s.png" width="100" etc1s > <img src="output_images/uastc.png" width="100" uastc> 
+<img src="output_images/etc1s.png" width="200" etc1s > <img src="output_images/uastc.png" width="200" uastc> 
+
+<img src="output_images/tonemapping.png" width="500">
+
+
+### Milestone 3
+[Milestone 3 PPT](https://github.com/0cfernandes00/565_FinalProject/blob/main/output_images/presentations/Milestone3Presentation.pdf)
+
+For Milestone 3, our goal was to add UI and other features to expand functionality.
+
+Outcome:
+- User Interaction
+  - alpha channels
+  - blending functions
+- gltf validate
+- Tonemapping mode UI
+  - None    
+  - Reinhard
+  - ACES
+  - Exposure/Clamp
+ 
+#### Web App and UI Overhaul
+The VSCode plugin was adapted to also be used for a Web App version of the KTX2 viewer. Additioanlly, the UI was completely overhauled to have more information displayed to the user about the file they have loaded as well as more control over the preview. Mip and color channel viewing were added as well as texture info and log panels. 
+
+<img width="2555" height="1347" alt="Screenshot 2025-12-01 120043" src="https://github.com/user-attachments/assets/b64347eb-895b-4d34-8f96-deff5bfe52e7" />
+<img width="447" height="223" alt="Screenshot 2025-12-01 120024" src="https://github.com/user-attachments/assets/e866ac5e-8d84-46d2-b7a9-a396760f8137" />
+<img width="441" height="280" alt="Screenshot 2025-12-01 120120" src="https://github.com/user-attachments/assets/8c55da89-7012-45fc-af54-2e768b9fad4d" />
+<img width="422" height="549" alt="Screenshot 2025-12-01 120109" src="https://github.com/user-attachments/assets/d11b59e0-bf81-4c31-942a-894edab1216c" />
+<img width="450" height="355" alt="Screenshot 2025-12-01 120055" src="https://github.com/user-attachments/assets/e4938634-35bd-461a-bd9f-4919c3932a5b" />
+
+
+#### Tonemapping
+
+UI:
+
+<img src="output_images/tonemappingUI.png" width="250">
+
+None:
+
+<img src="output_images/tonemappingNone.png" width="400">
+
+Reinhard:
+
+<img src="output_images/tonemappingReinhard.png" width="400">
+
+ACES:
+
+<img src="output_images/tonemappingACES.png" width="400">
+
+Clamp:
+
+<img src="output_images/tonemappingClamp.png" width="400">
 
 ## Setup
 
 ### VSCode
 Users will clone the repo from this [link](https://github.com/HarrisKoko/VSCode-KTX-Viewer.git). 
 Open the root of the folder in VSCode and run the following commands
-npm install
-npm run compile
-press F5 to open an new window
-ctrl+shift+p will open the search bar
-type WebGPU and select the first option
+1) npm install
+2) npm run compile
+3) press F5 to open an new window
+4) ctrl+shift+p will open the search bar
+5) type WebGPU and select the first option
 Click the file selection to open a texture
 
 ### RenderDoc

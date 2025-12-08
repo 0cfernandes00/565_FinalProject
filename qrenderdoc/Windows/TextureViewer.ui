@@ -797,6 +797,29 @@
      </widget>
     </item>
     <item>
+     <widget class="QLabel" name="tonemapExposureLabel">
+      <property name="text">
+       <string>Exposure</string>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QLineEdit" name="tonemapExposureValue"/>
+    </item>
+    <item>
+     <widget class="QSlider" name="tonemapExposure">
+      <property name="minimum">
+       <number>-100</number>
+      </property>
+      <property name="maximum">
+       <number>100</number>
+      </property>
+      <property name="orientation">
+       <enum>Qt::Horizontal</enum>
+      </property>
+     </widget>
+    </item>
+    <item>
      <widget class="Line" name="mulSep">
       <property name="orientation">
        <enum>Qt::Vertical</enum>

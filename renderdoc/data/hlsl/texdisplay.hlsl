@@ -25,6 +25,11 @@
 #include "hlsl_cbuffers.h"
 #include "hlsl_texsample.h"
 
+
+
+
+
+
 float ConvertSRGBToLinear(float srgb)
 {
   if(srgb <= 0.04045f)
@@ -74,6 +79,12 @@ float4 RENDERDOC_TexDisplayPS(v2f IN) : SV_Target0
   int4 scol = 0;
 
   float2 uvTex = IN.tex.xy;
+
+  // bit unpack DecodeYUV into decodeYUV and tonemapMode; bit 0 for decodeYUV, bits 1-3 for tonemapMode, bits 4-31 for exposure
+  bool decodeYUV = (asuint(DecodeYUV) & 0x1) != 0;
+  int tonemapMode = (asuint(DecodeYUV) >> 1) & 0x7;
+  uint packedExposure = asuint(DecodeYUV) >> 4;
+  float exposure = float(packedExposure) / float(0x0FFFFFFF) * 8.0f - 4.0f;
 
   if(FlipY)
     uvTex.y = 1.0f - uvTex.y;
@@ -223,6 +234,70 @@ float4 RENDERDOC_TexDisplayPS(v2f IN) : SV_Target0
         col = float4(dot(col.rgb, 1).xxx, 1);
     }
   }
+
+  // clamp and remove NaNs
+  bool3 nanMask = (col.rgb != col.rgb);
+  if (any(nanMask)) {
+      col.rgb = float3(0, 0, 0);
+  }
+  col.rgb = clamp(col.rgb, 0.0, 1e6);
+
+  // tonemapping
+  if (tonemapMode == 1) {
+      // Reinhard
+      float3 denom = max(float3(1e-6, 1e-6, 1e-6), 1.0 + col.rgb);
+      col.rgb = col.rgb / denom;
+  }
+  else if (tonemapMode == 2) {
+      // Hable (ACES approx; Narkowicz 2015)
+      const float a = 2.51;
+      const float b = 0.03;
+      const float c = 2.43;
+      const float d = 0.59;
+      const float e = 0.14;
+
+      float3 num = col.rgb * (a * col.rgb + b);
+      float3 denom = col.rgb * (c * col.rgb + d) + e;
+      denom = max(denom, float3(1e-6, 1e-6, 1e-6));
+      col.rgb = num / denom;
+      col.rgb = clamp(col.rgb, 0.0, 1.0);
+  }
+  else if (tonemapMode == 3) {
+      // Exposure mode
+      
+      float3 x = col.rgb * pow(2.0f, exposure);
+      x = clamp(x, 0.0f, 100.0f);
+      col.rgb = x;
+  }
+  else if (tonemapMode == 4) {
+      // ACES
+      float3 x = col.rgb;
+
+      // apply color transform matrix
+      float3x3 ACESInputMat = float3x3(
+          0.59719, 0.35458, 0.04823,
+          0.07600, 0.90834, 0.01566,
+          0.02840, 0.13383, 0.83777
+      );
+      x = mul(ACESInputMat, x);
+
+      // apply reference rendering transform (polynomial fit)
+      float3 a = x * (x + 0.0245786) - 0.000090537;
+      float3 b = x * (0.983729) + 0.4329510;
+      x = a / b;
+
+      // apply output device transform from ACES2065-1 to sRGB/Rec.709
+      float3x3 ACESOutputMat = float3x3(
+          1.60475, -0.53108, -0.07367,
+          -0.10208, 1.10813, -0.00605,
+          -0.00327, -0.07276, 1.07602
+      );
+      x = mul(ACESOutputMat, x);
+
+      // clamp to [0,1]
+      col.rgb = clamp(x, 0.0, 1.0);
+  }
+
 
   if(OutputDisplayFormat & TEXDISPLAY_GAMMA_CURVE)
   {
