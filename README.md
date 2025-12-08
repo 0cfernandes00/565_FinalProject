@@ -5,6 +5,7 @@ University of Pennsylvania, CIS 565: GPU Programming and Architecture Fall 2025,
 _A project by Caroline Fernandes, Harris Kokkinakos, Christina Qiu, and Rachel Lin._
 
 [Project Pitch Document](https://github.com/0cfernandes00/565_FinalProject/blob/main/output_images/presentations/GPUFinalProjectPitch.pdf)
+[GPU Final Presentation](https://docs.google.com/presentation/d/1WEUUk8hyXxQYHLImypmyG5MaDGBbxg-pb-nr4zqZeYo/edit?usp=sharing)
 
 ## Demos
 [Live Website](https://harriskoko.github.io/VSCode-KTX-Viewer/)
@@ -16,6 +17,7 @@ Users will have 3 different ways to access our work:
 
 ## Demo Video
 ![KTX2 Viewer Demo1](output_images/ktx2viewer_1gif.gif)
+![KTX2 Viewer Demo2](output_images/ktx2viewer_2gif2.gif)
 
 PR: https://github.com/AnalyticalGraphicsInc/gltf-vscode/pull/275
 
