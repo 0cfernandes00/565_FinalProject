@@ -1,4 +1,4 @@
-# VSCode and RenderDoc KTX2 Viewer
+# VSCode and RenderDoc HDR KTX2 Viewer
 
 University of Pennsylvania, CIS 565: GPU Programming and Architecture Fall 2025, Final Project.
 
@@ -9,17 +9,22 @@ _A project by Caroline Fernandes, Harris Kokkinakos, Christina Qiu, and Rachel L
 ## Demos
 [Live Website](https://harriskoko.github.io/VSCode-KTX-Viewer/)
 
+Users will have 3 different ways to access our work:
+- Inside of the glTF VSCode plugin, our tool is launched when users load a glTF with KTX2 textures
+- Our standalone website found (here's the [github]((https://github.com/HarrisKoko/VSCode-KTX-Viewer.git))
+- RenderDoc extension 
+
 ## Supported Compression Types
 
 Don Mccurdy's [website](https://github.com/donmccurdy/KTX2-Samples) shows the various compression types for KTX2 and were a great resource for us to test out our tool.
 We were able to support the majority of the 2d formats.
 
 
-<img src="output_images/vs_rgb8_linear.png" width="100"> <img src="output_images/vs_rgba8_linear.png" width="100"> <img src="output_images/vs_rgb9e5.png" width="100"> <img src="output_images/vs_r11g11b10.png" width="100"> <img src="output_images/vs_rgba16_linear.png" width="100">
+<img src="output_images/vs_rgb8_linear.png" width="80"> <img src="output_images/vs_rgba8_linear.png" width="80"> <img src="output_images/vs_rgb9e5.png" width="80"> <img src="output_images/vs_r11g11b10.png" width="80"> <img src="output_images/vs_rgba16_linear.png" width="80">
 
-<img src="output_images/vs_bc1_v0.png" width="100"> <img src="output_images/vs_bc3_v0.png" width="100"> <img src="output_images/vs_bc4_v0.png" width="100"> <img src="output_images/vs_bc5_v0.png" width="100"> <img src="output_images/vs_bc7_v0.png" width="100">
+<img src="output_images/vs_bc1_v0.png" width="80"> <img src="output_images/vs_bc3_v0.png" width="80"> <img src="output_images/vs_bc4_v0.png" width="80"> <img src="output_images/vs_bc5_v0.png" width="80"> <img src="output_images/vs_bc7_v0.png" width="80">
 
-<img src="output_images/vs_etc1s.png" width="100"> <img src="output_images/vs_uastc.png" width="100">
+<img src="output_images/vs_etc1s.png" width="80"> <img src="output_images/vs_uastc.png" width="80">
 
 The full list of supported compression types include:
 - BC1-7
