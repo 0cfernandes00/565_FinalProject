@@ -199,11 +199,11 @@ Clamp:
 ### VSCode
 Users will clone the repo from this [link](https://github.com/HarrisKoko/VSCode-KTX-Viewer.git). 
 Open the root of the folder in VSCode and run the following commands
-npm install
-npm run compile
-press F5 to open an new window
-ctrl+shift+p will open the search bar
-type WebGPU and select the first option
+1) npm install
+2) npm run compile
+3) press F5 to open an new window
+4) ctrl+shift+p will open the search bar
+5) type WebGPU and select the first option
 Click the file selection to open a texture
 
 ### RenderDoc
