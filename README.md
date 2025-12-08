@@ -94,9 +94,13 @@ WebGPU does not accept ETC1S or UASTC bitstreams directly. Instead, the viewer d
 
 1. Filtering/Sampling Methods
    * Trilinear - smooth/aliased, mip blend
+     <img src="output_images/trilinear.png" width="400">
    * Bilinear - smooth/aliased, sharp mips
+     <img src="output_images/bilinear.png" width="400">
    * Nearest - sharp/pixelated
+     <img src="output_images/nearest.png" width="400">
    * Anisotropic - high quality
+     <img src="output_images/anisotropic.png" width="400">
 2. Mipmap Previews
    * Allows user to scroll through existing mip levels.
 3. Tonemapping
