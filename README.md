@@ -19,6 +19,7 @@ Users will have 3 different ways to access our work:
 Don Mccurdy's [website](https://github.com/donmccurdy/KTX2-Samples) shows the various compression types for KTX2 and were a great resource for us to test out our tool.
 We were able to support the majority of the 2d formats.
 
+The images below were generate from our VSCode plugin.
 
 <img src="output_images/vs_rgb8_linear.png" width="80"> <img src="output_images/vs_rgba8_linear.png" width="80"> <img src="output_images/vs_rgb9e5.png" width="80"> <img src="output_images/vs_r11g11b10.png" width="80"> <img src="output_images/vs_rgba16_linear.png" width="80"> <img src="output_images/vs_rgba32.png" width="75">
 
@@ -28,13 +29,9 @@ We were able to support the majority of the 2d formats.
 
 <img src="output_images/etc1.png" width="90"> <img src="output_images/etc2.png" width="90">
 
-The full list of supported compression types include:
-- BC1-7
-- ETC1S
-- ETC1/2(on mobile)
-- UASTC
-- basis 
-- uncompressed (RGBA8, etc.)
+(ETC1 & ETC2 files were loaded from an android device)
+
+The full list of supported compression types for each of our pipelines can be found [here](https://docs.google.com/spreadsheets/d/1okcDSxKrtEwkA8DIzs-acaOrm2SIIE2WCJGXvDYgtkw/edit?usp=sharing)
   
 # Sections 
 - [Introduction](https://github.com/0cfernandes00/565_FinalProject/blob/main/README.md#introduction)
