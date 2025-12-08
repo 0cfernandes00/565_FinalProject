@@ -20,7 +20,7 @@ Don Mccurdy's [website](https://github.com/donmccurdy/KTX2-Samples) shows the va
 We were able to support the majority of the 2d formats.
 
 
-<img src="output_images/vs_rgb8_linear.png" width="80"> <img src="output_images/vs_rgba8_linear.png" width="80"> <img src="output_images/vs_rgb9e5.png" width="80"> <img src="output_images/vs_r11g11b10.png" width="80"> <img src="output_images/vs_rgba16_linear.png" width="80"> <img src="output_images/vs_rgba32.png" width="80">
+<img src="output_images/vs_rgb8_linear.png" width="80"> <img src="output_images/vs_rgba8_linear.png" width="80"> <img src="output_images/vs_rgb9e5.png" width="80"> <img src="output_images/vs_r11g11b10.png" width="80"> <img src="output_images/vs_rgba16_linear.png" width="80"> <img src="output_images/vs_rgba32.png" width="70">
 
 <img src="output_images/vs_bc1_v0.png" width="80"> <img src="output_images/vs_bc3_v0.png" width="80"> <img src="output_images/vs_bc4_v0.png" width="80"> <img src="output_images/vs_bc5_v0.png" width="80"> <img src="output_images/vs_bc7_v0.png" width="80">
 
