@@ -107,14 +107,26 @@ WebGPU does not accept ETC1S or UASTC bitstreams directly. Instead, the viewer d
      <img src="output_images/anisotropic.png" width="400">
 2. Mipmap Previews
    * Allows user to scroll through existing mip levels.
-  
+
+    ex: Mip levels 1, 4, 6, and 8
+   
      <img src="output_images/mip1.png" width="200"> <img src="output_images/mip4.png" width="200"> <img src="output_images/mip6.png" width="200"> <img src="output_images/mip8.png" width="200">
-3. Tonemapping
+4. Tonemapping
    * Reinhard
+     
+     <img src="output_images/reinhard.png" width="400">
    * Hable
+
+     <img src="output_images/hable.png" width="400">
    * ACES
+  
+     <img src="output_images/aces.png" width="400">
    * Exposure (as an additional tonemapping step)
-4. Texture Info (displays basic texture information)
+
+     ex: Exposure levels -2, -1, 0, 1, and 2
+     
+     <img src="output_images/aces_exposure-2.png" width="200"> <img src="output_images/aces_exposure-1.png" width="200"> <img src="output_images/aces.png" width="200"> <img src="output_images/aces_exposure+1.png" width="200"> <img src="output_images/aces_exposure+2.png" width="200">
+5. Texture Info (displays basic texture information)
    * Dimensions
    * Format (BC1, BC6H, ETC1S, etc.)
    * Number of Mip Levels
@@ -124,7 +136,7 @@ WebGPU does not accept ETC1S or UASTC bitstreams directly. Instead, the viewer d
    * Supercompression
    * KVD Information
    * DFD Information
-5. Console Log
+6. Console Log
    * Logs information on textures loaded/errors encountered for debugging purposes.
 
 ## Milestone Development
