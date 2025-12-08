@@ -10,9 +10,14 @@ _A project by Caroline Fernandes, Harris Kokkinakos, Christina Qiu, and Rachel L
 [Live Website](https://harriskoko.github.io/VSCode-KTX-Viewer/)
 
 Users will have 3 different ways to access our work:
-- Inside of the glTF VSCode plugin, our tool is launched when users load a glTF with KTX2 textures
+- Inside of the glTF VSCode plugin, our tool is launched when users click the "Open KTX2 Viewer" button within the glTF preview
 - Our standalone website [github](https://github.com/HarrisKoko/VSCode-KTX-Viewer.git)
 - RenderDoc extension 
+
+## Demo Video
+![KTX2 Viewer Demo1](output_images/ktx2viewer_1gif.gif)
+
+PR: https://github.com/AnalyticalGraphicsInc/gltf-vscode/pull/275
 
 ## Supported Compression Types
 
